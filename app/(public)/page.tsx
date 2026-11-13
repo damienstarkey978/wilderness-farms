@@ -16,19 +16,17 @@ export default async function HomePage() {
   return (
     <>
       <section className="bg-forest text-cream">
-        <div className="mx-auto max-w-lg px-5 pb-16 pt-7">
-          <div className="flex items-center gap-3">
-            <Image
-              src="/logo.webp"
-              alt="Wilderness Farms"
-              width={128}
-              height={128}
-              priority
-              className="size-16 rounded-2xl bg-cream object-cover"
-            />
-            <p className="text-sm font-medium text-yolk">{greenlit ? "Orders open" : "Waitlist"}</p>
-          </div>
-          <h1 className="mt-7 text-[2.65rem] font-semibold leading-[1.02] tracking-tight">Eggs at the door</h1>
+        <div className="mx-auto flex max-w-lg flex-col items-center px-5 pb-16 pt-8 text-center">
+          <Image
+            src="/logo.webp"
+            alt="Wilderness Farms"
+            width={320}
+            height={320}
+            priority
+            className="h-44 w-44 rounded-3xl bg-cream object-cover shadow-lg"
+          />
+          <p className="mt-5 text-sm font-medium text-yolk">{greenlit ? "Orders open" : "Waitlist"}</p>
+          <h1 className="mt-2 text-[2.65rem] font-semibold leading-[1.02] tracking-tight">Eggs at the door</h1>
           <p className="mt-3 max-w-sm text-[15px] leading-relaxed text-cream/80">
             A small flock, a short drive, and a dozen set on the porch. Monday through Saturday. We don&apos;t
             drive on Sunday.
