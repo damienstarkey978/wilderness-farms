@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { mkdirSync } from "node:fs";
+import { tmpdir } from "node:os";
 import path from "node:path";
 import { DatabaseSync, type SqlRow } from "node:sqlite";
 import { classifyAddress, type AddressFlag } from "./address";
@@ -565,8 +566,26 @@ export function openFarm(file: string): FarmStore {
 let singleton: FarmStore | null = null;
 let singletonPath: string | null = null;
 
+function preferredFarmFile(): string {
+  return path.join(process.cwd(), "data", "farm.sqlite");
+}
+
+// Netlify's server filesystem is read-only except for the temp directory.
+// Leave DATABASE_PATH unset and still boot: the waitlist renders, and payments stay unconfigured.
+function writableFarmFile(): string {
+  const preferred = preferredFarmFile();
+  try {
+    mkdirSync(path.dirname(preferred), { recursive: true });
+    return preferred;
+  } catch {
+    const fallback = path.join(tmpdir(), "wilderness-farms", "farm.sqlite");
+    mkdirSync(path.dirname(fallback), { recursive: true });
+    return fallback;
+  }
+}
+
 export function farmPath(): string {
-  return process.env.DATABASE_PATH || path.join(process.cwd(), "data", "farm.sqlite");
+  return process.env.DATABASE_PATH || writableFarmFile();
 }
 
 export function getFarm(): FarmStore {

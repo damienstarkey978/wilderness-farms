@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdtempSync } from "node:fs";
+import { chmodSync, mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
@@ -8,7 +8,7 @@ import { classifyAddress } from "../lib/address";
 import { adminCookieValid, passwordMatches, signAdminCookie } from "../lib/auth";
 import { DEFAULT_ADMIN_PASSWORD, PRICE_CENTS } from "../lib/constants";
 import { signupsToCsv } from "../lib/csv";
-import { openFarm, type FarmStore } from "../lib/db";
+import { farmPath, openFarm, type FarmStore } from "../lib/db";
 import { placeInterest, placeOrder, settleCheckout } from "../lib/orders";
 import { parseForm, type RequestInput } from "../lib/parse";
 import { verifyStripeSignature } from "../lib/stripe";
@@ -297,6 +297,28 @@ test("csv export includes emails and the admin cookie accepts the local default"
   if (previousPassword === undefined) delete process.env.ADMIN_PASSWORD;
   else process.env.ADMIN_PASSWORD = previousPassword;
   farm.close();
+});
+
+test("an unwritable working directory still opens a farm database", () => {
+  const previous = process.env.DATABASE_PATH;
+  delete process.env.DATABASE_PATH;
+  const locked = mkdtempSync(path.join(tmpdir(), "wf-lock-"));
+  chmodSync(locked, 0o555);
+  const cwd = process.cwd();
+  try {
+    process.chdir(locked);
+    const file = farmPath();
+    assert.equal(file.startsWith(tmpdir()), true);
+    assert.equal(file.includes(`${path.sep}wilderness-farms${path.sep}`), true);
+    const farm = openFarm(file);
+    assert.equal(farm.getGreenlit(), false);
+    farm.close();
+  } finally {
+    process.chdir(cwd);
+    chmodSync(locked, 0o755);
+    if (previous === undefined) delete process.env.DATABASE_PATH;
+    else process.env.DATABASE_PATH = previous;
+  }
 });
 
 test("stripe webhook signatures reject a stale or altered body", () => {
