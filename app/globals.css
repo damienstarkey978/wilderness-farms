@@ -1,0 +1,140 @@
+@import "tailwindcss";
+
+@theme inline {
+  --color-cream: #f3ead8;
+  --color-cream-deep: #e6d7bc;
+  --color-paper: #fffaf2;
+  --color-forest: #1c4a32;
+  --color-forest-deep: #102818;
+  --color-canopy: #2f6b45;
+  --color-sunrise: #e08a2e;
+  --color-yolk: #f2c14e;
+  --color-bark: #6a3b24;
+  --color-ink: #1c2416;
+  --color-moss: #3f6b48;
+  --font-sans: var(--font-body), "Nunito Sans", "Segoe UI", sans-serif;
+  --font-display: var(--font-fraunces), Georgia, "Times New Roman", serif;
+}
+
+:root {
+  color: var(--color-ink);
+  background: #f3ead8;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  color: var(--color-ink);
+  background:
+    radial-gradient(900px 380px at 8% -8%, rgb(242 193 78 / 70%), transparent 60%),
+    radial-gradient(720px 320px at 100% 0%, rgb(224 138 46 / 45%), transparent 55%),
+    #f3ead8;
+  font-family: var(--font-body), "Nunito Sans", "Segoe UI", sans-serif;
+}
+
+:focus-visible {
+  outline: 3px solid var(--color-sunrise);
+  outline-offset: 2px;
+}
+
+.display {
+  font-family: var(--font-fraunces), Georgia, serif;
+  font-weight: 560;
+  letter-spacing: -0.03em;
+}
+
+.sunrise-rule {
+  height: 7px;
+  background: linear-gradient(90deg, #f2c14e 0%, #e08a2e 48%, #6a3b24 100%);
+}
+
+.day-card {
+  background: var(--color-paper);
+  border: 1px solid #d9c7a4;
+  box-shadow: 3px 3px 0 var(--color-forest);
+  border-radius: 14px;
+  padding: 0.85rem 0.75rem 0.95rem;
+}
+
+.day-card.monday {
+  background: #fff3df;
+}
+
+.paper {
+  background: var(--color-paper);
+  border: 1px solid #e3d3b4;
+  box-shadow: 0 18px 40px rgb(16 40 24 / 8%);
+  border-radius: 22px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.field span {
+  font-size: 0.92rem;
+  font-weight: 750;
+}
+
+.field input,
+.field select,
+.field textarea {
+  width: 100%;
+  border: 1px solid #cbb892;
+  background: #fff;
+  color: var(--color-ink);
+  border-radius: 12px;
+  padding: 0.75rem 0.85rem;
+  font: inherit;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  border: 0;
+  cursor: pointer;
+  border-radius: 999px;
+  padding: 0.85rem 1.25rem;
+  font: inherit;
+  font-weight: 800;
+  text-decoration: none;
+  background: var(--color-forest);
+  color: #f6edd9;
+}
+
+.btn:hover {
+  background: var(--color-forest-deep);
+}
+
+.btn.sunrise {
+  background: var(--color-sunrise);
+  color: #1c2416;
+}
+
+.btn.sunrise:hover {
+  background: #c8741f;
+}
+
+.btn.quiet {
+  background: transparent;
+  color: var(--color-forest);
+  border: 1px solid #1c4a32;
+}
+
+.btn:disabled {
+  cursor: wait;
+  opacity: 0.7;
+}
+
+.flag-in_area {
+  color: var(--color-forest);
+}
+
+.flag-nearby_undecided,
+.flag-outside {
+  color: var(--color-bark);
+}
