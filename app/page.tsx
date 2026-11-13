@@ -74,13 +74,10 @@ export default async function HomePage() {
 
       <section className="grid gap-6 rounded-[24px] bg-forest px-6 py-8 text-cream md:grid-cols-[1.2fr_0.8fr] md:px-8">
         <div>
-          <h2 className="display text-3xl text-yolk">Who&apos;s on the farm</h2>
+          <h2 className="display text-3xl text-yolk">Eggs at the door</h2>
           <p className="mt-3 text-lg leading-relaxed">
-            Damien Starkey and Howard, with their sons Gavin and Hollis.
-          </p>
-          <p className="mt-3 leading-relaxed text-cream/90">
-            Howard already has the health certificates, the refrigeration, the flock, and the license to sell
-            eggs.
+            A small flock, a short drive, and a dozen set on the porch. Monday through Saturday. We don&apos;t
+            drive on Sunday.
           </p>
         </div>
         <dl className="grid content-start gap-4 text-sm">
