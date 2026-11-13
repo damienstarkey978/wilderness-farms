@@ -22,7 +22,17 @@ export const metadata: Metadata = {
     default: "Wilderness Farms",
     template: "%s · Wilderness Farms",
   },
+  applicationName: "Wilderness Farms",
   description: "Organic eggs delivered in Ponte Vedra Beach, Florida. $10 a dozen, Monday through Saturday.",
+  appleWebApp: {
+    capable: true,
+    title: "Wilderness Farms",
+    statusBarStyle: "default",
+  },
+  icons: {
+    apple: [{ url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
+  },
+  manifest: "/manifest.webmanifest",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

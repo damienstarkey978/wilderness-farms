@@ -7,7 +7,7 @@ export function AppFooter() {
         <p>Wilderness Farms · Ponte Vedra Beach</p>
         <span className="flex gap-4">
           <Link href="/demo" className="text-moss no-underline">
-            Sunday demo
+            Walkthrough
           </Link>
           <Link href="/admin" className="font-medium text-forest no-underline">
             Farm desk
