@@ -28,9 +28,9 @@ export function SignupForm({
 
   if (state?.ok && state.kind === "waitlist") {
     return (
-      <section className="paper border-l-8 border-l-canopy px-6 py-6" aria-live="polite">
-        <h2 className="display text-3xl text-forest-deep">You&apos;re on the list, {state.name}.</h2>
-        <p className="mt-3 text-lg leading-relaxed">
+      <section aria-live="polite">
+        <h2 className="text-3xl font-semibold tracking-tight text-forest-deep">You&apos;re on the list, {state.name}.</h2>
+        <p className="mt-3 text-[15px] leading-relaxed">
           This is interest, not a reserved carton. We did not charge you, and we did not hold{" "}
           {state.dozens} dozen for {state.cadence === "weekly" ? `every ${state.weekdayLabel}` : `a ${state.weekdayLabel}`}.
           The hens are not laying until March 2027.
@@ -45,10 +45,12 @@ export function SignupForm({
   }
 
   return (
-    <form action={action} className="paper grid gap-5 px-5 py-6 md:px-7">
+    <form action={action} className="grid gap-5 pb-24">
       <div>
-        <h2 className="display text-3xl text-forest-deep">{greenlit ? "Order eggs" : "Get on the list"}</h2>
-        <p className="mt-2 leading-relaxed">
+        <h2 className="text-2xl font-semibold tracking-tight text-forest-deep">
+          {greenlit ? "Order eggs" : "Get on the list"}
+        </h2>
+        <p className="mt-2 text-[15px] leading-relaxed">
           {greenlit
             ? "A weekly order holds that weekday every week until you cancel. A one-time order uses the day once. Both count against the dozen left."
             : "Tell us you want eggs. This does not reserve a carton and it is not an order."}
@@ -74,21 +76,21 @@ export function SignupForm({
         </p>
       ) : null}
 
-      <label className="field">
+      <label className="grid gap-1.5 text-sm font-medium">
         <span>Name</span>
-        <input name="name" autoComplete="name" required maxLength={120} />
+        <input name="name" autoComplete="name" required maxLength={120} className="h-12 rounded-xl border border-forest/15 bg-white px-3 text-base font-normal" />
       </label>
-      <div className="grid gap-5 md:grid-cols-2">
-        <label className="field">
+      <div className="grid gap-5">
+        <label className="grid gap-1.5 text-sm font-medium">
           <span>Email</span>
-          <input name="email" type="email" autoComplete="email" required maxLength={200} />
+          <input name="email" type="email" autoComplete="email" required maxLength={200} className="h-12 rounded-xl border border-forest/15 bg-white px-3 text-base font-normal" />
         </label>
-        <label className="field">
+        <label className="grid gap-1.5 text-sm font-medium">
           <span>Phone</span>
-          <input name="phone" type="tel" autoComplete="tel" required maxLength={40} />
+          <input name="phone" type="tel" autoComplete="tel" required maxLength={40} className="h-12 rounded-xl border border-forest/15 bg-white px-3 text-base font-normal" />
         </label>
       </div>
-      <label className="field">
+      <label className="grid gap-1.5 text-sm font-medium">
         <span>Delivery address</span>
         <textarea
           name="address"
@@ -99,6 +101,7 @@ export function SignupForm({
           value={address}
           onChange={(event) => setAddress(event.target.value)}
           placeholder="Street, Ponte Vedra Beach, FL"
+          className="rounded-xl border border-forest/15 bg-white px-3 py-3 text-base font-normal"
         />
         <span className="font-semibold text-moss">
           We deliver in Ponte Vedra Beach. Regular Ponte Vedra is not decided. An address outside the beach is
@@ -108,8 +111,8 @@ export function SignupForm({
         {place && place.flag === "in_area" ? <span className="text-forest">{place.note}</span> : null}
       </label>
 
-      <div className="grid gap-5 md:grid-cols-2">
-        <label className="field">
+      <div className="grid gap-5">
+        <label className="grid gap-1.5 text-sm font-medium">
           <span>Dozens</span>
           <input
             name="dozens"
@@ -120,14 +123,16 @@ export function SignupForm({
             required
             value={dozens}
             onChange={(event) => setDozens(Number(event.target.value))}
+            className="h-12 rounded-xl border border-forest/15 bg-white px-3 text-base font-normal"
           />
         </label>
-        <label className="field">
+        <label className="grid gap-1.5 text-sm font-medium">
           <span>Delivery day</span>
           <select
             name="weekday"
             value={weekday}
             onChange={(event) => setWeekday(event.target.value as Weekday)}
+            className="h-12 rounded-xl border border-forest/15 bg-white px-3 text-base font-normal"
           >
             {WEEKDAYS.map((value) => (
               <option key={value} value={value}>
@@ -141,8 +146,8 @@ export function SignupForm({
         </label>
       </div>
 
-      <fieldset className="grid gap-2">
-        <legend className="font-extrabold">How often</legend>
+      <fieldset className="grid gap-3">
+        <legend className="text-sm font-medium">How often</legend>
         <label className="flex items-start gap-2">
           <input type="radio" name="cadence" value="weekly" defaultChecked />
           <span>Weekly. Holds this weekday every week until you cancel.</span>
@@ -153,14 +158,23 @@ export function SignupForm({
         </label>
       </fieldset>
 
-      <p className="display text-3xl text-forest">
-        {Number.isInteger(dozens) && dozens > 0 ? `${dozens} dozen · ${price}` : "Choose a dozen count"}
-      </p>
-      <p className="text-sm text-moss">$10 a dozen. No charge on the waitlist.</p>
-
-      <button className="btn sunrise w-fit" type="submit" disabled={pending}>
-        {pending ? "Saving…" : greenlit ? "Pay by card" : "Put me on the list"}
-      </button>
+      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-forest/10 bg-paper/95 px-4 py-3 backdrop-blur">
+        <div className="mx-auto flex max-w-lg items-center gap-3">
+          <div className="min-w-0">
+            <p className="text-[11px] font-medium text-moss">$10 a dozen. No charge on the waitlist.</p>
+            <p className="truncate text-sm font-semibold">
+              {Number.isInteger(dozens) && dozens > 0 ? `${dozens} dozen · ${price}` : "Choose a dozen count"}
+            </p>
+          </div>
+          <button
+            className="ml-auto inline-flex h-12 shrink-0 items-center justify-center rounded-2xl bg-sunrise px-5 text-sm font-semibold text-ink disabled:opacity-70"
+            type="submit"
+            disabled={pending}
+          >
+            {pending ? "Saving…" : greenlit ? "Pay by card" : "Put me on the list"}
+          </button>
+        </div>
+      </div>
     </form>
   );
 }

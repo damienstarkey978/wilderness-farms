@@ -1,9 +1,5 @@
 import type { Metadata } from "next";
-import { Fraunces, Nunito_Sans } from "next/font/google";
-import { connection } from "next/server";
-import { SiteFooter } from "@/components/site-footer";
-import { SiteHeader } from "@/components/site-header";
-import { getFarm } from "@/lib/db";
+import { Fraunces, Inter, Nunito_Sans } from "next/font/google";
 import "./globals.css";
 
 const display = Fraunces({
@@ -16,6 +12,11 @@ const body = Nunito_Sans({
   variable: "--font-body",
 });
 
+const app = Inter({
+  subsets: ["latin"],
+  variable: "--font-app",
+});
+
 export const metadata: Metadata = {
   title: {
     default: "Wilderness Farms",
@@ -24,17 +25,10 @@ export const metadata: Metadata = {
   description: "Organic eggs delivered in Ponte Vedra Beach, Florida. $10 a dozen, Monday through Saturday.",
 };
 
-export default async function RootLayout({ children }: LayoutProps<"/">) {
-  await connection();
-  const greenlit = getFarm().getGreenlit();
-
+export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en" className={`${display.variable} ${body.variable} h-full`}>
-      <body className="flex min-h-full flex-col antialiased">
-        <SiteHeader greenlit={greenlit} />
-        <main className="flex-1">{children}</main>
-        <SiteFooter />
-      </body>
+    <html lang="en" className={`${display.variable} ${body.variable} ${app.variable} h-full`}>
+      <body className="min-h-full antialiased">{children}</body>
     </html>
   );
 }
