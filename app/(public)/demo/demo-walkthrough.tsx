@@ -89,9 +89,14 @@ export function DemoWalkthrough() {
           <p className="text-xs font-semibold uppercase tracking-wide text-sunrise">Demo</p>
           <h1 className="text-2xl font-semibold tracking-tight text-forest-deep">Sunday walkthrough</h1>
         </div>
-        <Link href="/" className="text-sm font-medium text-forest no-underline">
-          Back
-        </Link>
+        <span className="flex flex-col items-end gap-2 text-sm font-medium">
+          <Link href="/" className="text-forest no-underline">
+            Back
+          </Link>
+          <a href="/wilderness-farms-walkthrough.mp4" className="text-forest">
+            Watch the video
+          </a>
+        </span>
       </div>
       <p className="text-sm leading-relaxed text-moss">
         Sample Ponte Vedra Beach names only. Nothing here is a real customer, and no card is charged. Saturday holds{" "}
