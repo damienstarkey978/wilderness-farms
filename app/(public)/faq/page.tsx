@@ -43,7 +43,7 @@ const items = [
 export default function FaqPage() {
   return (
     <>
-      <div className="mx-auto max-w-[860px] px-5 py-16 md:px-8 md:py-24">
+      <div className="mx-auto max-w-[860px] px-5 py-8 md:px-8 md:py-24">
         <p className="text-xs font-medium tracking-[0.18em] text-sage uppercase">Questions</p>
         <h1 className="mt-3 font-serif text-5xl text-forest md:text-6xl">FAQ</h1>
         <p className="mt-4 max-w-xl text-lg leading-relaxed text-ink/80">

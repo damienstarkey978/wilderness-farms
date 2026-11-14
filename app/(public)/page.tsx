@@ -58,6 +58,52 @@ export default async function HomePage() {
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <section className="md:hidden">
+        <div className="px-5 pt-8">
+          <Image
+            src="/logo.webp"
+            alt="Wilderness Farms"
+            width={760}
+            height={695}
+            priority
+            className="mx-auto h-auto w-[17.5rem]"
+          />
+          <p className="mt-6 text-center text-xs font-medium tracking-[0.18em] text-sage uppercase">Ponte Vedra Beach</p>
+          <h1 className="mt-3 font-serif text-[2.65rem] leading-[1.05] text-forest">
+            Farm Fresh Eggs. Delivered to Your Door.
+          </h1>
+          <p className="mt-3 text-base leading-relaxed text-ink/80">
+            Fresh eggs from our small farm, brought to your door. $10 a dozen.
+          </p>
+        </div>
+        <Image
+          src="/photos/hero-carton.jpg"
+          alt="Brown and cream eggs in an open carton on a wooden table"
+          width={1200}
+          height={900}
+          priority
+          className="mt-5 aspect-[16/10] w-full object-cover"
+        />
+        <div className="grid grid-cols-2 gap-3 px-5 pt-5">
+          <div className="rounded-2xl bg-white px-4 py-3">
+            <p className="text-xs text-sage">Price</p>
+            <p className="font-serif text-2xl text-forest">$10</p>
+          </div>
+          <div className="rounded-2xl bg-white px-4 py-3">
+            <p className="text-xs text-sage">First eggs</p>
+            <p className="font-serif text-2xl text-forest">{LAYING_START}</p>
+          </div>
+        </div>
+        <div className="px-5 pt-5">
+          <Link
+            href="/signup"
+            className="flex h-12 w-full items-center justify-center rounded-full bg-forest text-base font-medium text-white no-underline"
+          >
+            {ordering ? "Order eggs" : "Join"}
+          </Link>
+        </div>
+      </section>
+      <div className="hidden md:block">
       <section className="mx-auto grid max-w-[1200px] items-center gap-10 px-5 py-14 md:grid-cols-[1.05fr_0.95fr] md:gap-16 md:px-8 md:py-24">
         <div className="rise">
           <p className="text-xs font-medium tracking-[0.18em] text-sage uppercase">
@@ -202,6 +248,7 @@ export default async function HomePage() {
       </section>
 
       <EarlyAccessBand />
+      </div>
     </>
   );
 }

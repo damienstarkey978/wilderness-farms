@@ -10,7 +10,7 @@ const LINKS = [
 
 export function PublicFooter() {
   return (
-    <footer className="border-t border-beige bg-cream">
+    <footer className="hidden border-t border-beige bg-cream md:block">
       <div className="mx-auto flex max-w-[1200px] flex-col gap-8 px-5 py-14 md:flex-row md:items-end md:justify-between md:px-8 md:py-16">
         <div>
           <p className="font-serif text-3xl text-forest">Wilderness Farms</p>

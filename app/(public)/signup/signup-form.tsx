@@ -8,7 +8,9 @@ import type { CapacityDay } from "@/lib/db";
 import type { SignupFormState } from "@/lib/form-state";
 
 const fieldClass =
-  "h-12 w-full rounded-xl border border-beige bg-white px-3 text-base font-normal text-ink outline-none focus-visible:border-forest";
+  "h-12 w-full rounded-xl border border-beige bg-cream px-3 text-base font-normal text-ink outline-none focus-visible:border-forest md:bg-white";
+
+const shell = "grid gap-5 md:rounded-[18px] md:bg-white md:p-10 md:shadow-[0_10px_30px_rgb(37_42_36_/_6%)]";
 
 function availability(day: CapacityDay): string {
   if (day.remaining <= 0) return `Fully Booked for ${day.label}`;
@@ -43,7 +45,7 @@ export function SignupForm({
 
   if (state?.ok && state.kind === "waitlist") {
     return (
-      <section aria-live="polite" className="soft-card rise p-8 md:p-10">
+      <section aria-live="polite" className={`${shell} rise`}>
         <h2 className="font-serif text-4xl text-forest">You&apos;re on the list!</h2>
         <p className="mt-4 text-lg leading-relaxed">
           {state.duplicate
@@ -57,7 +59,7 @@ export function SignupForm({
 
   if (!greenlit) {
     return (
-      <form action={action} className="soft-card grid gap-5 p-6 md:p-10">
+      <form action={action} className={shell}>
         <p className="text-sm text-ink/70">Name, email, and ZIP are required. Everything else can wait.</p>
         {state && !state.ok ? (
           <p className="rounded-xl bg-[#f8e4d4] px-4 py-3 text-bark" role="alert">
@@ -158,7 +160,7 @@ export function SignupForm({
   }
 
   return (
-    <form action={action} className="soft-card grid gap-5 p-6 md:p-10">
+    <form action={action} className={shell}>
       <p className="text-sm text-ink/70">$10 per dozen. Card payment goes through Stripe. We never see the card.</p>
       {canceled ? (
         <p className="rounded-xl bg-[#fff3df] px-4 py-3 text-bark" role="status">

@@ -23,8 +23,8 @@ export default async function SignupPage(props: {
   }
 
   return (
-    <div className="mx-auto grid max-w-[1100px] items-start gap-12 px-5 py-16 md:grid-cols-[0.9fr_1.1fr] md:px-8 md:py-24">
-      <div>
+    <div className="md:mx-auto md:grid md:max-w-[1100px] md:grid-cols-[0.9fr_1.1fr] md:items-start md:gap-12 md:px-8 md:py-24">
+      <div className="hidden md:block">
         <p className="text-xs font-medium tracking-[0.18em] text-sage uppercase">
           {greenlit ? "Orders" : "Early access"}
         </p>
@@ -37,12 +37,25 @@ export default async function SignupPage(props: {
             : `Name, email, and ZIP are enough to join. First eggs are expected ${LAYING_START}. Joining is free and does not reserve eggs.`}
         </p>
       </div>
-      <SignupForm
-        greenlit={greenlit}
-        paymentsReady={paymentsConfigured()}
-        days={farm.capacity()}
-        canceled={one(params.payment) === "canceled"}
-      />
+      <div className="px-3 pt-3 md:p-0">
+        <div className="rounded-[28px] bg-white px-5 pt-3 pb-6 shadow-[0_16px_40px_rgb(37_42_36_/_8%)] md:rounded-none md:bg-transparent md:p-0 md:shadow-none">
+          <div className="mx-auto mb-4 h-1.5 w-10 rounded-full bg-beige md:hidden" aria-hidden="true" />
+          <h1 className="font-serif text-[2rem] leading-tight text-forest md:hidden">
+            {greenlit ? "Order eggs" : "Be First in Line for Fresh Eggs."}
+          </h1>
+          <p className="mt-2 mb-5 text-base leading-relaxed text-ink/75 md:hidden">
+            {greenlit
+              ? "Monday through Saturday. Nothing is charged unless the card payment goes through."
+              : `Name, email, and ZIP. Free to join. First eggs expected ${LAYING_START}.`}
+          </p>
+          <SignupForm
+            greenlit={greenlit}
+            paymentsReady={paymentsConfigured()}
+            days={farm.capacity()}
+            canceled={one(params.payment) === "canceled"}
+          />
+        </div>
+      </div>
     </div>
   );
 }

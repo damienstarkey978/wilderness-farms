@@ -9,7 +9,7 @@ export const metadata: Metadata = { title: "Our Farm" };
 export default function OurFarmPage() {
   return (
     <>
-      <div className="mx-auto max-w-[1200px] px-5 py-16 md:px-8 md:py-24">
+      <div className="mx-auto max-w-[1200px] px-5 py-8 md:px-8 md:py-24">
         <p className="text-xs font-medium tracking-[0.18em] text-sage uppercase">Ponte Vedra Beach</p>
         <h1 className="mt-3 max-w-3xl font-serif text-5xl leading-[1.08] text-forest md:text-6xl">
           Small Farm. Big Love for Good Food.
@@ -18,7 +18,7 @@ export default function OurFarmPage() {
           Wilderness Farms is a small farm in Ponte Vedra Beach. We&apos;re preparing for first eggs in {LAYING_START},
           then local delivery to your door, Monday through Saturday, at $10 a dozen.
         </p>
-        <div className="photo-frame mt-10">
+        <div className="photo-frame mt-8 max-md:-mx-5 max-md:rounded-none max-md:shadow-none md:mt-10">
           <Image
             src="/photos/hens.jpg"
             alt="Brown hens walking on grass"

@@ -37,7 +37,7 @@ const facts = [
 export default function HowItWorksPage() {
   return (
     <>
-      <div className="mx-auto max-w-[1200px] px-5 py-16 md:px-8 md:py-24">
+      <div className="mx-auto max-w-[1200px] px-5 py-8 md:px-8 md:py-24">
         <p className="text-xs font-medium tracking-[0.18em] text-sage uppercase">The plan</p>
         <h1 className="mt-3 max-w-3xl font-serif text-5xl leading-[1.08] text-forest md:text-6xl">
           Fresh Eggs, Delivered Simply.

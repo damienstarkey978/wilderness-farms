@@ -16,7 +16,7 @@ function Leaf({ className }: { className?: string }) {
 
 export function EarlyAccessBand() {
   return (
-    <section className="relative overflow-hidden bg-forest text-cream">
+    <section className="relative hidden overflow-hidden bg-forest text-cream md:block">
       <Leaf className="pointer-events-none absolute -left-8 bottom-0 hidden h-44 w-44 text-sage/50 md:block" />
       <Leaf className="pointer-events-none absolute -right-6 top-0 hidden h-40 w-40 -scale-x-100 text-gold/40 md:block" />
       <div className="relative mx-auto max-w-[760px] px-5 py-16 text-center md:py-24">
