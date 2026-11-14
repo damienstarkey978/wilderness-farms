@@ -13,7 +13,7 @@ import {
   type Cadence,
   type Weekday,
 } from "./constants";
-import { validateRequest, type RequestInput } from "./parse";
+import { validateEarlyAccess, validateRequest, type EarlyAccessInput, type RequestInput } from "./parse";
 
 export type SignupStatus = "interest" | "pending_payment" | "confirmed" | "canceled" | "fulfilled";
 export type SignupKind = "waitlist" | "order";
@@ -43,9 +43,11 @@ export type Signup = {
   address: string;
   addressFlag: AddressFlag;
   addressNote: string;
+  zip: string;
+  consent: boolean;
   dozens: number;
-  cadence: Cadence;
-  weekday: Weekday;
+  cadence: Cadence | "";
+  weekday: Weekday | "";
   kind: SignupKind;
   status: SignupStatus;
   amountCents: number | null;
@@ -152,9 +154,11 @@ function mapSignup(row: SqlRow): Signup {
     address: text(row, "address"),
     addressFlag: text(row, "address_flag") as AddressFlag,
     addressNote: text(row, "address_note"),
+    zip: text(row, "zip"),
+    consent: Number(row.consent) === 1,
     dozens: Number(row.dozens),
-    cadence: text(row, "cadence") as Cadence,
-    weekday: text(row, "weekday") as Weekday,
+    cadence: text(row, "cadence") as Cadence | "",
+    weekday: text(row, "weekday") as Weekday | "",
     kind: text(row, "kind") as SignupKind,
     status: text(row, "status") as SignupStatus,
     amountCents: row.amount_cents == null ? null : Number(row.amount_cents),
@@ -233,6 +237,18 @@ export class FarmStore {
     });
   }
 
+  findWaitlistByEmail(email: string): Signup | null {
+    const row = this.db
+      .prepare(
+        `SELECT * FROM signups
+         WHERE kind = 'waitlist' AND status = 'interest' AND lower(email) = lower(?)
+         ORDER BY created_at ASC, id ASC
+         LIMIT 1`,
+      )
+      .get(email.trim());
+    return row ? mapSignup(row) : null;
+  }
+
   insertWaitlist(input: RequestInput, now = new Date()): Signup {
     const checked = validateRequest(input);
     if (!checked.ok) {
@@ -240,7 +256,48 @@ export class FarmStore {
     }
     const place = classifyAddress(input.address);
     return this.insert({
-      input,
+      row: {
+        name: input.name,
+        email: input.email,
+        phone: input.phone,
+        address: input.address,
+        zip: "",
+        dozens: input.dozens,
+        cadence: input.cadence,
+        weekday: input.weekday,
+        consent: false,
+      },
+      now,
+      kind: "waitlist",
+      status: "interest",
+      amountCents: null,
+      pendingExpiresAt: null,
+      place,
+    });
+  }
+
+  insertEarlyAccess(input: EarlyAccessInput, now = new Date()): Signup {
+    const checked = validateEarlyAccess(input);
+    if (!checked.ok) throw new Error(checked.error);
+    const street = input.address.trim();
+    const address = street
+      ? street.toLowerCase().includes(input.zip.trim().toLowerCase())
+        ? street
+        : `${street}, ${input.zip.trim()}`
+      : input.zip.trim();
+    const place = classifyAddress(address);
+    return this.insert({
+      row: {
+        name: input.name,
+        email: input.email,
+        phone: input.phone,
+        address,
+        zip: input.zip.trim(),
+        dozens: input.dozens ?? 0,
+        cadence: input.cadence,
+        weekday: input.weekday,
+        consent: true,
+      },
       now,
       kind: "waitlist",
       status: "interest",
@@ -281,7 +338,17 @@ export class FarmStore {
       }
       const place = classifyAddress(input.address);
       const signup = this.insert({
-        input,
+        row: {
+          name: input.name,
+          email: input.email,
+          phone: input.phone,
+          address: input.address,
+          zip: "",
+          dozens: input.dozens,
+          cadence: input.cadence,
+          weekday: input.weekday,
+          consent: false,
+        },
         now,
         kind: "order",
         status: "pending_payment",
@@ -514,7 +581,17 @@ export class FarmStore {
   }
 
   private insert(args: {
-    input: RequestInput;
+    row: {
+      name: string;
+      email: string;
+      phone: string;
+      address: string;
+      zip: string;
+      dozens: number;
+      cadence: Cadence | "";
+      weekday: Weekday | "";
+      consent: boolean;
+    };
     now: Date;
     kind: SignupKind;
     status: SignupStatus;
@@ -528,25 +605,27 @@ export class FarmStore {
         `INSERT INTO signups (
            id, created_at, name, email, phone, address, address_flag, address_note,
            dozens, cadence, weekday, kind, status, amount_cents, stripe_session_id,
-           pending_expires_at, fulfilled_at, canceled_at
-         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, ?, NULL, NULL)`,
+           pending_expires_at, fulfilled_at, canceled_at, zip, consent
+         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, ?, NULL, NULL, ?, ?)`,
       )
       .run(
         id,
         args.now.toISOString(),
-        args.input.name.trim(),
-        args.input.email.trim(),
-        args.input.phone.trim(),
-        args.input.address.trim(),
+        args.row.name.trim(),
+        args.row.email.trim(),
+        args.row.phone.trim(),
+        args.row.address.trim(),
         args.place.flag,
         args.place.note,
-        args.input.dozens,
-        args.input.cadence,
-        args.input.weekday,
+        args.row.dozens,
+        args.row.cadence,
+        args.row.weekday,
         args.kind,
         args.status,
         args.amountCents,
         args.pendingExpiresAt,
+        args.row.zip.trim(),
+        args.row.consent ? 1 : 0,
       );
     const saved = this.getSignup(id);
     if (!saved) throw new Error("Signup did not save.");
@@ -560,7 +639,19 @@ export function openFarm(file: string): FarmStore {
   db.exec("PRAGMA journal_mode = DELETE");
   db.exec("PRAGMA busy_timeout = 5000");
   db.exec(SCHEMA);
+  ensureSignupColumns(db);
   return new FarmStore(db);
+}
+
+function ensureSignupColumns(db: DatabaseSync): void {
+  const names = new Set(
+    db
+      .prepare("PRAGMA table_info(signups)")
+      .all()
+      .map((row) => String(row.name)),
+  );
+  if (!names.has("zip")) db.exec("ALTER TABLE signups ADD COLUMN zip TEXT NOT NULL DEFAULT ''");
+  if (!names.has("consent")) db.exec("ALTER TABLE signups ADD COLUMN consent INTEGER NOT NULL DEFAULT 0");
 }
 
 let singleton: FarmStore | null = null;

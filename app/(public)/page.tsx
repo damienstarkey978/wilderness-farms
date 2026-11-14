@@ -1,105 +1,207 @@
 import Image from "next/image";
 import Link from "next/link";
 import { connection } from "next/server";
-import { CapacityBoard } from "@/components/capacity-board";
+import { EarlyAccessBand } from "@/components/early-access-band";
 import { LAYING_START } from "@/lib/constants";
 import { getFarm } from "@/lib/db";
-import { paymentsConfigured } from "@/lib/stripe";
+
+const steps = [
+  {
+    title: "Join the List",
+    body: "Be the first to know when we're ready.",
+    image: "/photos/hands-eggs.jpg",
+    alt: "Hands lifting brown eggs from straw",
+  },
+  {
+    title: "Choose Your Eggs",
+    body: "Order a dozen of our fresh, local eggs.",
+    image: "/photos/hero-carton.jpg",
+    alt: "Brown and cream eggs in an open carton",
+  },
+  {
+    title: "Enjoy Farm Fresh Delivery",
+    body: "We'll deliver your eggs straight to your door.",
+    image: "/photos/porch-delivery.jpg",
+    alt: "A plain egg carton on a front-porch mat",
+  },
+];
+
+const cards = [
+  {
+    title: "Locally Raised",
+    body: "Eggs from our small farm in Ponte Vedra Beach, for neighbors close by.",
+  },
+  {
+    title: "Delivered to Your Door",
+    body: "A dozen brought to your doorstep, Monday through Saturday.",
+  },
+  {
+    title: "Simple and Fresh",
+    body: "One price, $10 per dozen. Joining the list is free.",
+  },
+];
 
 export default async function HomePage() {
   await connection();
-  const farm = getFarm();
-  const greenlit = farm.getGreenlit();
-  const payments = paymentsConfigured();
-  const action = greenlit ? "Order eggs" : "Say you want eggs";
+  const ordering = getFarm().getGreenlit();
+
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "LocalBusiness",
+    name: "Wilderness Farms",
+    description:
+      "Fresh, locally raised eggs for Ponte Vedra Beach. Deliveries expected March 2027. $10 per dozen.",
+    areaServed: "Ponte Vedra Beach, FL",
+    priceRange: "$10",
+  };
 
   return (
     <>
-      <section className="bg-forest text-cream">
-        <div className="mx-auto flex max-w-lg flex-col items-center px-5 pb-16 pt-8 text-center">
-          <Image
-            src="/logo.webp"
-            alt="Wilderness Farms"
-            width={320}
-            height={320}
-            priority
-            className="h-44 w-44 rounded-3xl bg-cream object-cover shadow-lg"
-          />
-          <p className="mt-5 text-sm font-medium text-yolk">{greenlit ? "Orders open" : "Waitlist"}</p>
-          <h1 className="mt-2 text-[2.65rem] font-semibold leading-[1.02] tracking-tight">Eggs at the door</h1>
-          <p className="mt-3 max-w-sm text-[15px] leading-relaxed text-cream/80">
-            A small flock, a short drive, and a dozen set on the porch. Monday through Saturday. We don&apos;t
-            drive on Sunday.
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <section className="mx-auto grid max-w-[1200px] items-center gap-10 px-5 py-14 md:grid-cols-[1.05fr_0.95fr] md:gap-16 md:px-8 md:py-24">
+        <div className="rise">
+          <p className="text-xs font-medium tracking-[0.18em] text-sage uppercase">
+            Locally raised in Ponte Vedra Beach, FL
           </p>
-          <p className="mt-8 text-5xl font-semibold tracking-tight text-yolk">$10</p>
-          <p className="mt-1 text-sm text-cream/70">a dozen</p>
-        </div>
-      </section>
-
-      <section className="-mt-6 rounded-t-[28px] bg-cream px-5 pt-7">
-        <div className="mx-auto flex max-w-lg flex-col gap-8">
-          <p className="rounded-2xl bg-paper px-4 py-3 text-[15px] leading-relaxed">
-            {greenlit && payments ? (
-              <>
-                <strong>Orders are open.</strong> Choose a day, Monday through Saturday, and pay by card. A weekly
-                order holds that weekday until you cancel it. A one-time order uses the day once.
-              </>
-            ) : null}
-            {greenlit && !payments ? (
-              <>
-                <strong>Payments are not configured.</strong> The farm is marked open, but we can&apos;t take a card
-                yet. Nothing will be charged, and no dozen will be reserved.
-              </>
-            ) : null}
-            {!greenlit ? (
-              <>
-                <strong>The list is open. Orders are not.</strong> Tell us you want eggs. We will keep your name. We
-                will not hold a carton for you, and we will not charge you. The hens are not laying until {LAYING_START}.
-              </>
-            ) : null}
+          <h1 className="mt-4 font-serif text-[3.1rem] leading-[1.05] text-forest md:text-7xl">
+            Farm Fresh Eggs. Delivered to Your Door.
+          </h1>
+          <p className="mt-5 max-w-xl text-lg leading-relaxed text-ink/80">
+            Fresh, locally raised eggs from our small family farm, delivered straight to your doorstep.
           </p>
-
-          <dl className="grid grid-cols-3 gap-2">
-            <div className="rounded-2xl bg-paper px-3 py-3">
-              <dt className="text-[11px] font-medium text-moss">Price</dt>
-              <dd className="mt-1 text-sm font-semibold text-forest-deep">$10 a dozen</dd>
-            </div>
-            <div className="rounded-2xl bg-paper px-3 py-3">
-              <dt className="text-[11px] font-medium text-moss">First eggs</dt>
-              <dd className="mt-1 text-sm font-semibold text-forest-deep">{LAYING_START}</dd>
-            </div>
-            <div className="rounded-2xl bg-paper px-3 py-3">
-              <dt className="text-[11px] font-medium text-moss">Route</dt>
-              <dd className="mt-1 text-sm font-semibold text-forest-deep">Ponte Vedra Beach</dd>
-            </div>
-          </dl>
-
-          <CapacityBoard days={farm.capacity()} variant="app" />
-
-          <p className="text-[15px] leading-relaxed text-ink/80">
-            Organic eggs from a small flock in Ponte Vedra Beach. Until an admin marks the farm greenlit, a signup is
-            interest only. It does not reserve a carton, and it is not a payment.
-          </p>
-          <Link href="/delivery" className="text-sm font-semibold text-forest no-underline">
-            How delivery works
-          </Link>
-        </div>
-      </section>
-
-      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-forest/10 bg-paper/95 px-4 py-3 backdrop-blur">
-        <div className="mx-auto flex max-w-lg items-center gap-3">
-          <div className="min-w-0">
-            <p className="text-[11px] font-medium text-moss">Ponte Vedra Beach</p>
-            <p className="text-sm font-semibold">$10 a dozen</p>
+          <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
+            <Link
+              href="/signup"
+              className="inline-flex h-12 items-center justify-center rounded-full bg-forest px-6 text-base font-medium text-white no-underline hover:bg-forest-deep"
+            >
+              {ordering ? "Order eggs" : "Join the Early Access List"}
+            </Link>
+            <Link href="/our-farm" className="inline-flex h-12 items-center justify-center px-3 text-base text-forest no-underline">
+              Discover Our Farm →
+            </Link>
           </div>
+          <p className="mt-6 text-sm text-ink/70">
+            Launching {LAYING_START} <span className="px-2 text-gold">|</span> $10 per dozen{" "}
+            <span className="px-2 text-gold">|</span> Local delivery
+          </p>
+        </div>
+        <div className="photo-frame rise">
+          <Image
+            src="/photos/hero-carton.jpg"
+            alt="Brown and cream eggs in an open carton on a wooden table"
+            width={1200}
+            height={900}
+            priority
+            className="h-auto w-full object-cover"
+          />
+        </div>
+      </section>
+
+      <section className="mx-auto grid max-w-[1200px] items-center gap-10 px-5 py-16 md:grid-cols-[1.1fr_0.9fr] md:px-8 md:py-28">
+        <div>
+          <h2 className="font-serif text-4xl leading-tight text-forest md:text-5xl">Better Mornings Start at the Farm.</h2>
+          <p className="mt-5 max-w-xl text-lg leading-relaxed text-ink/80">
+            There&apos;s something special about knowing where your food comes from. At Wilderness Farms, we&apos;re
+            bringing fresh eggs and a little piece of farm life straight to our neighbors in Ponte Vedra Beach.
+          </p>
+          <div className="mt-8 grid gap-4 sm:grid-cols-3">
+            {cards.map((card) => (
+              <article key={card.title} className="soft-card p-5">
+                <h3 className="font-serif text-2xl text-forest">{card.title}</h3>
+                <p className="mt-2 text-sm leading-relaxed text-ink/75">{card.body}</p>
+              </article>
+            ))}
+          </div>
+        </div>
+        <div className="photo-frame">
+          <Image
+            src="/photos/breakfast.jpg"
+            alt="Scrambled eggs, toast, and berries on a plate"
+            width={1200}
+            height={900}
+            className="h-full w-full object-cover"
+          />
+        </div>
+      </section>
+
+      <section className="bg-white">
+        <div className="mx-auto max-w-[1200px] px-5 py-16 md:px-8 md:py-28">
+          <h2 className="text-center font-serif text-4xl text-forest md:text-5xl">Fresh Eggs in Three Simple Steps.</h2>
+          <div className="mt-12 grid gap-6 md:grid-cols-3">
+            {steps.map((step, index) => (
+              <article key={step.title} className="step-card overflow-hidden">
+                <div className="relative">
+                  <Image src={step.image} alt={step.alt} width={900} height={680} className="aspect-[4/3] w-full object-cover" />
+                  <span className="absolute top-4 left-4 flex h-9 w-9 items-center justify-center rounded-full bg-forest text-sm text-white">
+                    {index + 1}
+                  </span>
+                </div>
+                <div className="p-6">
+                  <h3 className="font-serif text-2xl text-forest">{step.title}</h3>
+                  <p className="mt-2 text-sm leading-relaxed text-ink/75">{step.body}</p>
+                </div>
+              </article>
+            ))}
+          </div>
+          <p className="mx-auto mt-8 max-w-2xl text-center text-sm leading-relaxed text-ink/70">
+            This is the plan, not a booking. Ordering isn&apos;t open yet, and joining the list does not reserve eggs.
+          </p>
+        </div>
+      </section>
+
+      <section className="mx-auto grid max-w-[1200px] items-center gap-10 px-5 py-16 md:grid-cols-2 md:px-8 md:py-28">
+        <div className="photo-frame">
+          <Image
+            src="/photos/hero-carton.jpg"
+            alt="A carton of brown and cream eggs"
+            width={1200}
+            height={900}
+            className="h-auto w-full object-cover"
+          />
+        </div>
+        <div>
+          <p className="text-xs font-medium tracking-[0.18em] text-sage uppercase">Good eggs</p>
+          <h2 className="mt-3 font-serif text-4xl text-forest md:text-5xl">Simple Pricing.</h2>
+          <p className="mt-5 font-serif text-3xl text-forest">One Dozen Farm Fresh Eggs</p>
+          <p className="mt-2 text-4xl text-forest">$10 per dozen</p>
+          <p className="mt-4 max-w-md text-lg leading-relaxed text-ink/80">
+            Fresh local eggs, conveniently delivered to your home.
+          </p>
           <Link
             href="/signup"
-            className="ml-auto inline-flex h-12 items-center justify-center rounded-2xl bg-sunrise px-5 text-sm font-semibold text-ink no-underline"
+            className="mt-8 inline-flex h-12 items-center justify-center rounded-full bg-forest px-6 font-medium text-white no-underline hover:bg-forest-deep"
           >
-            {action}
+            Join Early Access
           </Link>
+          <p className="mt-3 text-sm text-ink/70">Free to join. No payment required.</p>
         </div>
-      </div>
+      </section>
+
+      <section className="bg-white">
+        <div className="mx-auto grid max-w-[1200px] items-center gap-10 px-5 py-16 md:grid-cols-2 md:px-8 md:py-28">
+          <div className="photo-frame md:order-2">
+            <Image
+              src="/photos/hens.jpg"
+              alt="Brown hens walking on grass"
+              width={1200}
+              height={900}
+              className="aspect-[4/3] h-auto w-full object-cover"
+            />
+          </div>
+          <div>
+            <h2 className="font-serif text-4xl leading-tight text-forest md:text-5xl">Small Farm. Big Love for Good Food.</h2>
+            <p className="mt-5 text-lg leading-relaxed text-ink/80">
+              Wilderness Farms is a small farm in Ponte Vedra Beach. We&apos;re getting ready for first eggs in{" "}
+              {LAYING_START}, then a short drive to your door, Monday through Saturday, at $10 a dozen.
+            </p>
+            <Link href="/our-farm" className="mt-6 inline-flex h-12 items-center text-forest no-underline">
+              Discover Our Farm →
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      <EarlyAccessBand />
     </>
   );
 }

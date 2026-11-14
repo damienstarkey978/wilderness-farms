@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { connection } from "next/server";
-import { formatDollars, WEEKDAY_LABEL } from "@/lib/constants";
+import { formatDollars, WEEKDAY_LABEL, isWeekday } from "@/lib/constants";
 import { getFarm, type Signup } from "@/lib/db";
 import { reservationSentence, settleCheckout } from "@/lib/orders";
 import { showsDelivered } from "@/lib/route";
@@ -52,7 +52,8 @@ export default async function SuccessPage(props: {
           </h1>
           <p className="mt-3 text-[15px] leading-relaxed">{reservationSentence(signup)}</p>
           <p className="mt-2 text-[15px]">
-            {formatDollars(signup.amountCents ?? 0)} paid for {WEEKDAY_LABEL[signup.weekday]}. Stripe marked the card
+            {formatDollars(signup.amountCents ?? 0)} paid
+            {isWeekday(signup.weekday) ? ` for ${WEEKDAY_LABEL[signup.weekday]}` : ""}. Stripe marked the card
             payment as paid.
           </p>
         </>

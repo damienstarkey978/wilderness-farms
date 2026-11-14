@@ -4,7 +4,7 @@ import { LAYING_START } from "@/lib/constants";
 import { getFarm } from "@/lib/db";
 import { paymentsConfigured } from "@/lib/stripe";
 
-export const metadata = { title: "Eggs" };
+export const metadata = { title: "Join Early Access" };
 
 function one(value: string | string[] | undefined): string {
   return Array.isArray(value) ? value[0] ?? "" : value ?? "";
@@ -23,28 +23,26 @@ export default async function SignupPage(props: {
   }
 
   return (
-    <div className="mx-auto max-w-lg px-5 pt-8">
-      <p className="text-sm font-semibold text-sunrise">{greenlit ? "Order" : "Waitlist"}</p>
-      <h1 className="mt-2 text-4xl font-semibold tracking-tight text-forest-deep">
-        {greenlit ? "Reserve a delivery" : "Tell us you want eggs"}
-      </h1>
-      <p className="mt-3 text-[15px] leading-relaxed text-ink/80">
-        {greenlit
-          ? "Payment is by card through Stripe. Your phone number is how we reach you about the drop-off. We never see the card."
-          : `Hens start laying in ${LAYING_START}. Until the farm is greenlit, this is interest only. It does not reserve a carton.`}
-      </p>
-      <p className="mt-3 text-[15px] leading-relaxed">
-        Current delivery area: <strong>Ponte Vedra Beach</strong>. Regular Ponte Vedra is undecided. We still take the
-        address.
-      </p>
-      <div className="mt-8">
-        <SignupForm
-          greenlit={greenlit}
-          paymentsReady={paymentsConfigured()}
-          days={farm.capacity()}
-          canceled={one(params.payment) === "canceled"}
-        />
+    <div className="mx-auto grid max-w-[1100px] items-start gap-12 px-5 py-16 md:grid-cols-[0.9fr_1.1fr] md:px-8 md:py-24">
+      <div>
+        <p className="text-xs font-medium tracking-[0.18em] text-sage uppercase">
+          {greenlit ? "Orders" : "Early access"}
+        </p>
+        <h1 className="mt-3 font-serif text-5xl leading-[1.08] text-forest md:text-6xl">
+          {greenlit ? "Order eggs" : "Be First in Line for Fresh Eggs."}
+        </h1>
+        <p className="mt-5 text-lg leading-relaxed text-ink/80">
+          {greenlit
+            ? "Choose a day, Monday through Saturday, and pay by card. Nothing is charged unless Stripe confirms the payment."
+            : `Name, email, and ZIP are enough to join. First eggs are expected ${LAYING_START}. Joining is free and does not reserve eggs.`}
+        </p>
       </div>
+      <SignupForm
+        greenlit={greenlit}
+        paymentsReady={paymentsConfigured()}
+        days={farm.capacity()}
+        canceled={one(params.payment) === "canceled"}
+      />
     </div>
   );
 }

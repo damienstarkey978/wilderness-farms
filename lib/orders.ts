@@ -1,6 +1,6 @@
-import { WEEKDAY_LABEL } from "./constants";
+import { WEEKDAY_LABEL, isWeekday } from "./constants";
 import type { FarmStore, Signup } from "./db";
-import { validateRequest, type RequestInput } from "./parse";
+import { validateEarlyAccess, validateRequest, type EarlyAccessInput, type RequestInput } from "./parse";
 import {
   PaymentsNotConfiguredError,
   createCheckoutSession,
@@ -14,6 +14,7 @@ export type InterestResult =
       ok: true;
       kind: "waitlist";
       signup: Signup;
+      duplicate?: boolean;
     }
   | { ok: false; code: "validation" | "capacity"; error: string };
 
@@ -27,6 +28,15 @@ export type SettleResult =
 
 const PAYMENTS_COPY =
   "Payments are not configured. Nothing was charged, and no dozen were reserved.";
+
+export function placeEarlyAccess(farm: FarmStore, input: EarlyAccessInput): InterestResult {
+  const checked = validateEarlyAccess(input);
+  if (!checked.ok) return checked;
+  const existing = farm.findWaitlistByEmail(input.email);
+  if (existing) return { ok: true, kind: "waitlist", signup: existing, duplicate: true };
+  const signup = farm.insertEarlyAccess(input);
+  return { ok: true, kind: "waitlist", signup };
+}
 
 export function placeInterest(farm: FarmStore, input: RequestInput): InterestResult {
   const checked = validateRequest(input);
@@ -73,8 +83,8 @@ export async function placeOrder(
         email: held.signup.email,
         phone: held.signup.phone,
         dozens: held.signup.dozens,
-        weekday: held.signup.weekday,
-        cadence: held.signup.cadence,
+        weekday: input.weekday,
+        cadence: input.cadence,
         successUrl: `${opts.origin}/order/success?session_id={CHECKOUT_SESSION_ID}`,
         cancelUrl: `${opts.origin}/signup?payment=canceled&hold=${held.signup.id}`,
       },
@@ -153,6 +163,9 @@ export function cadenceLabel(cadence: Signup["cadence"]): string {
 }
 
 export function reservationSentence(signup: Signup): string {
+  if (!isWeekday(signup.weekday) || signup.dozens < 1) {
+    return "Delivery details were not chosen.";
+  }
   const day = WEEKDAY_LABEL[signup.weekday];
   if (signup.cadence === "weekly") {
     return `${signup.dozens} dozen every ${day}, until you cancel.`;

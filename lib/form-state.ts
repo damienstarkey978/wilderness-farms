@@ -14,4 +14,5 @@ export type SignupFormState = {
   cadence?: Cadence;
   flag?: AddressFlag;
   flagNote?: string;
+  duplicate?: boolean;
 };

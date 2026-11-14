@@ -9,8 +9,8 @@ import { adminCookieValid, passwordMatches, signAdminCookie } from "../lib/auth"
 import { DEFAULT_ADMIN_PASSWORD, PRICE_CENTS } from "../lib/constants";
 import { signupsToCsv } from "../lib/csv";
 import { farmPath, openFarm, type FarmStore } from "../lib/db";
-import { placeInterest, placeOrder, settleCheckout } from "../lib/orders";
-import { parseForm, type RequestInput } from "../lib/parse";
+import { placeEarlyAccess, placeInterest, placeOrder, settleCheckout } from "../lib/orders";
+import { parseEarlyAccess, parseForm, type EarlyAccessInput, type RequestInput } from "../lib/parse";
 import { verifyStripeSignature } from "../lib/stripe";
 
 function tempFarm(): FarmStore {
@@ -83,6 +83,74 @@ test("refuses a waitlist ask over the day's promise", () => {
   const monday = placeInterest(farm, request({ dozens: 50, weekday: "mon", email: "mon@example.com" }));
   assert.equal(monday.ok, true);
   assert.equal(farm.capacity().find((day) => day.weekday === "mon")?.remaining, 50);
+  farm.close();
+});
+
+function early(overrides: Partial<EarlyAccessInput> = {}): EarlyAccessInput {
+  return {
+    name: "Ada Marsh",
+    email: "ada@example.com",
+    zip: "32082",
+    phone: "",
+    address: "",
+    dozens: null,
+    cadence: "",
+    weekday: "",
+    consent: true,
+    ...overrides,
+  };
+}
+
+test("early access saves name, email, and ZIP without reserving eggs", () => {
+  const farm = tempFarm();
+  const saved = placeEarlyAccess(farm, early());
+  assert.equal(saved.ok, true);
+  if (!saved.ok) return;
+  assert.equal(saved.signup.kind, "waitlist");
+  assert.equal(saved.signup.status, "interest");
+  assert.equal(saved.signup.zip, "32082");
+  assert.equal(saved.signup.phone, "");
+  assert.equal(saved.signup.dozens, 0);
+  assert.equal(saved.signup.consent, true);
+  assert.equal(saved.signup.addressFlag, "in_area");
+  assert.equal(farm.capacity().find((day) => day.weekday === "mon")?.remaining, 50);
+  const again = placeEarlyAccess(farm, early({ email: "Ada@example.com", name: "Ada Again" }));
+  assert.equal(again.ok, true);
+  if (again.ok) assert.equal(again.duplicate, true);
+  assert.equal(farm.listSignups().length, 1);
+  farm.close();
+});
+
+test("early access rejects a missing ZIP and an over-cap estimate", () => {
+  const farm = tempFarm();
+  const missing = placeEarlyAccess(farm, early({ zip: "82" }));
+  assert.equal(missing.ok, false);
+  const noConsent = placeEarlyAccess(farm, early({ email: "b@example.com", consent: false }));
+  assert.equal(noConsent.ok, false);
+  const badPhone = placeEarlyAccess(farm, early({ email: "c@example.com", phone: "123" }));
+  assert.equal(badPhone.ok, false);
+  const sundayForm = new FormData();
+  sundayForm.set("name", "Ada");
+  sundayForm.set("email", "sun@example.com");
+  sundayForm.set("zip", "32082");
+  sundayForm.set("consent", "yes");
+  sundayForm.set("weekday", "sun");
+  const sunday = parseEarlyAccess(sundayForm);
+  assert.equal(sunday.ok, false);
+  const over = placeEarlyAccess(farm, early({ email: "e@example.com", weekday: "tue", dozens: 30 }));
+  assert.equal(over.ok, false);
+  if (!over.ok) assert.equal(over.code, "capacity");
+  assert.equal(farm.listSignups().length, 0);
+
+  const form = new FormData();
+  form.set("company_website", "https://spam.example");
+  form.set("name", "Bot");
+  form.set("email", "bot@example.com");
+  form.set("zip", "32082");
+  form.set("consent", "yes");
+  const spam = parseEarlyAccess(form);
+  assert.equal(spam.ok, true);
+  if (spam.ok) assert.equal("spam" in spam, true);
   farm.close();
 });
 

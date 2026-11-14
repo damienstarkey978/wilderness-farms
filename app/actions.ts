@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
-import { ADMIN_COOKIE, STAFF_COOKIE, WEEKDAY_LABEL, isStaffId } from "@/lib/constants";
+import { ADMIN_COOKIE, STAFF_COOKIE, isStaffId } from "@/lib/constants";
 import { changeCartons, setCartons } from "@/lib/cartons";
 import { getFarm } from "@/lib/db";
 import { type SignupFormState, type StaffFormState } from "@/lib/form-state";
@@ -16,8 +16,8 @@ import {
   signStaffCookie,
 } from "@/lib/auth";
 import { recordMoney, recordWeeklyPay } from "@/lib/ledger";
-import { placeInterest, placeOrder } from "@/lib/orders";
-import { parseForm } from "@/lib/parse";
+import { placeEarlyAccess, placeOrder } from "@/lib/orders";
+import { parseEarlyAccess, parseForm } from "@/lib/parse";
 import { markStopDelivered, reorderStop } from "@/lib/route";
 
 function refreshFarm() {
@@ -56,25 +56,28 @@ export async function submitSignup(
   _prev: SignupFormState | null,
   formData: FormData,
 ): Promise<SignupFormState> {
-  const parsed = parseForm(formData);
-  if (!parsed.ok) return { ok: false, code: parsed.code, error: parsed.error };
-
   const farm = getFarm();
   if (!farm.getGreenlit()) {
-    const saved = placeInterest(farm, parsed.value);
+    const parsed = parseEarlyAccess(formData);
+    if (!parsed.ok) return { ok: false, code: parsed.code, error: parsed.error };
+    if ("spam" in parsed) {
+      return { ok: true, kind: "waitlist", name: "" };
+    }
+    const saved = placeEarlyAccess(farm, parsed.value);
     if (!saved.ok) return { ok: false, code: saved.code, error: saved.error };
     refreshFarm();
     return {
       ok: true,
       kind: "waitlist",
       name: saved.signup.name,
-      dozens: saved.signup.dozens,
-      weekdayLabel: WEEKDAY_LABEL[saved.signup.weekday],
-      cadence: saved.signup.cadence,
+      duplicate: saved.duplicate,
       flag: saved.signup.addressFlag,
       flagNote: saved.signup.addressNote,
     };
   }
+
+  const parsed = parseForm(formData);
+  if (!parsed.ok) return { ok: false, code: parsed.code, error: parsed.error };
 
   const ordered = await placeOrder(farm, parsed.value, { origin: await originFromHeaders() });
   if (!ordered.ok) return { ok: false, code: ordered.code, error: ordered.error };
