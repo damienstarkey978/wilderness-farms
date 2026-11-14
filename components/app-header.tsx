@@ -4,15 +4,15 @@ import Link from "next/link";
 export function AppHeader() {
   return (
     <header className="sticky top-0 z-30 bg-forest text-cream">
-      <div className="mx-auto flex h-14 max-w-lg items-center gap-3 px-4">
+      <div className="mx-auto flex min-h-16 max-w-lg items-center gap-3 px-4 py-2">
         <Link href="/" className="flex min-w-0 items-center gap-2.5 text-cream no-underline">
           <Image
             src="/logo.webp"
             alt="Wilderness Farms"
-            width={64}
-            height={64}
+            width={760}
+            height={695}
             priority
-            className="size-9 shrink-0 rounded-xl bg-cream object-cover"
+            className="h-12 w-auto shrink-0 bg-cream"
           />
           <span className="truncate text-[15px] font-semibold tracking-tight">Wilderness Farms</span>
         </Link>

@@ -12,7 +12,7 @@ export function SiteHeader({ greenlit }: { greenlit: boolean }) {
             width={760}
             height={695}
             priority
-            className="h-[4.6rem] w-auto rounded-md bg-cream"
+            className="h-auto w-[4.6rem] bg-cream"
           />
           <span>
             <span className="display block text-2xl leading-none text-cream">Wilderness Farms</span>
