@@ -4,7 +4,7 @@ import { connection } from "next/server";
 import { redirect } from "next/navigation";
 import { cancelSignup, fulfillSignup, logout, setGreenlit } from "@/app/actions";
 import { CapacityBoard } from "@/components/capacity-board";
-import { ADMIN_COOKIE, WEEKDAY_LABEL, formatDollars } from "@/lib/constants";
+import { ADMIN_COOKIE, WEEKDAY_LABEL, formatDollars, isWeekday } from "@/lib/constants";
 import { adminCookieValid } from "@/lib/auth";
 import { getFarm, type Signup } from "@/lib/db";
 import { showsDelivered } from "@/lib/route";
@@ -92,10 +92,18 @@ export default async function AdminPage() {
                     <p>{signup.phone}</p>
                   </td>
                   <td className="px-3 py-3">
-                    {signup.dozens} dozen · {WEEKDAY_LABEL[signup.weekday]}
+                    {signup.dozens > 0 ? `${signup.dozens} dozen` : "Dozens not estimated"}
+                    {" · "}
+                    {isWeekday(signup.weekday) ? WEEKDAY_LABEL[signup.weekday] : "Day not chosen"}
                     <br />
-                    {signup.cadence === "weekly" ? "Weekly" : "One time"}
+                    {signup.cadence === "weekly" ? "Weekly" : signup.cadence === "one_time" ? "One time" : "Cadence not chosen"}
                     {signup.amountCents != null ? ` · ${formatDollars(signup.amountCents)}` : ""}
+                    {signup.zip ? (
+                      <>
+                        <br />
+                        ZIP {signup.zip}
+                      </>
+                    ) : null}
                   </td>
                   <td className="px-3 py-3">
                     {signup.kind === "waitlist" ? (

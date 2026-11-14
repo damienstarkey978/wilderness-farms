@@ -1,5 +1,3 @@
-import Link from "next/link";
-
 export function SiteFooter() {
   return (
     <footer className="mt-auto border-t border-[#e3d3b4] bg-forest-deep text-cream">
@@ -7,12 +5,9 @@ export function SiteFooter() {
         <div>
           <p className="display text-xl text-yolk">Wilderness Farms</p>
           <p className="mt-1 max-w-md text-cream/90">
-            Organic eggs delivered in Ponte Vedra Beach, Florida. $10 a dozen. Monday through Saturday.
+            Eggs for Ponte Vedra Beach. $10 a dozen. Monday through Saturday.
           </p>
         </div>
-        <Link href="/admin" className="font-bold text-yolk no-underline">
-          Farm desk
-        </Link>
       </div>
     </footer>
   );

@@ -1,12 +1,14 @@
-import { AppFooter } from "@/components/app-footer";
-import { AppHeader } from "@/components/app-header";
+import { MobileTabs } from "@/components/mobile-tabs";
+import { PublicFooter } from "@/components/public-footer";
+import { PublicHeader } from "@/components/public-header";
 
 export default function PublicLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex min-h-dvh flex-col bg-cream text-ink [font-family:var(--font-app),Inter,ui-sans-serif,system-ui,sans-serif]">
-      <AppHeader />
+    <div className="flex min-h-dvh flex-col bg-cream pb-[calc(5.5rem+env(safe-area-inset-bottom))] text-ink md:pb-0">
+      <PublicHeader />
       <main className="flex-1">{children}</main>
-      <AppFooter />
+      <PublicFooter />
+      <MobileTabs />
     </div>
   );
 }

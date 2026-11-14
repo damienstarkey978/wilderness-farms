@@ -1,4 +1,4 @@
-import { WEEKDAY_LABEL, type Weekday } from "./constants";
+import { WEEKDAY_LABEL, isWeekday, type Weekday } from "./constants";
 import { isDeliveryWeekday, weekdayOf } from "./dates";
 import type { FarmStore, Signup } from "./db";
 
@@ -83,7 +83,7 @@ export function markStopDelivered(
   if (signup.weekday !== weekday) {
     return {
       ok: false,
-      error: `${signup.name} is scheduled for ${WEEKDAY_LABEL[signup.weekday]}, not ${WEEKDAY_LABEL[weekday]}.`,
+      error: `${signup.name} is scheduled for ${isWeekday(signup.weekday) ? WEEKDAY_LABEL[signup.weekday] : "another day"}, not ${WEEKDAY_LABEL[weekday]}.`,
     };
   }
   farm.recordDelivery(signup.id, deliveredOn, now);

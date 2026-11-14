@@ -6,11 +6,8 @@ export function AppFooter() {
       <div className="mx-auto flex max-w-lg items-center justify-between gap-4">
         <p>Wilderness Farms · Ponte Vedra Beach</p>
         <span className="flex gap-4">
-          <Link href="/demo" className="text-moss no-underline">
-            Walkthrough
-          </Link>
-          <Link href="/admin" className="font-medium text-forest no-underline">
-            Farm desk
+          <Link href="/signup" className="text-moss no-underline">
+            Join Early Access
           </Link>
         </span>
       </div>

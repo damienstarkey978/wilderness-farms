@@ -23,8 +23,8 @@ export function SiteHeader({ greenlit }: { greenlit: boolean }) {
           <Link href="/" className="text-cream no-underline">
             Home
           </Link>
-          <Link href="/delivery" className="text-cream no-underline">
-            Delivery
+          <Link href="/how-it-works" className="text-cream no-underline">
+            How It Works
           </Link>
           <Link href="/signup" className="rounded-full bg-sunrise px-3 py-1.5 text-ink no-underline">
             {greenlit ? "Order eggs" : "The list"}
