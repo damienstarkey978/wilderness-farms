@@ -35,7 +35,10 @@ export default async function AdminPage() {
           <h1 className="display text-4xl text-forest-deep">{greenlit ? "Orders are open" : "Waitlist only"}</h1>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Link className="btn" href="/staff">
+          <Link className="btn" href="/staff/route">
+            Today&apos;s route
+          </Link>
+          <Link className="btn quiet" href="/staff">
             Staff desk
           </Link>
           <form action={logout}>

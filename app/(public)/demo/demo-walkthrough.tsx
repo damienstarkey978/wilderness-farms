@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { DAY_TASKS, compareAddresses, followGpsUrl } from "@/lib/driving";
 
 type Cadence = "Weekly" | "One time";
 
@@ -31,10 +32,13 @@ const EXTRA_WAITLIST: Person[] = [
   { id: "w2", name: "Demo Drew Dock", address: "48 Demo Ln, Ponte Vedra Beach, FL 32082", phone: "904-555-0192", dozens: 1, cadence: "One time", weekday: "Thursday" },
 ];
 
-function mapsUrl(addresses: string[]): string | null {
-  if (addresses.length === 0) return null;
-  return `https://www.google.com/maps/dir/${addresses.map((address) => encodeURIComponent(address)).join("/")}`;
-}
+type StopStatus = "waiting" | "on_the_way" | "arrived" | "delivered";
+
+const CUSTOMER_SEES: Record<Exclude<StopStatus, "waiting">, string> = {
+  on_the_way: "On the way",
+  arrived: "Arrived",
+  delivered: "Delivered",
+};
 
 function Caption({ children }: { children: string }) {
   return <p className="rounded-xl bg-yolk px-3 py-2 text-sm font-semibold text-ink">{children}</p>;
@@ -46,14 +50,15 @@ export function DemoWalkthrough() {
   const [signed, setSigned] = useState(false);
   const [showOrder, setShowOrder] = useState(false);
   const [ordered, setOrdered] = useState(false);
-  const [flock, setFlock] = useState({ collected: true, cleaned: true, packed: false });
+  const [checked, setChecked] = useState<Record<string, string>>({});
   const [cartons, setCartons] = useState(36);
-  const [group, setGroup] = useState<"A" | "B">("A");
-  const [delivered, setDelivered] = useState<Record<string, boolean>>({});
+  const [stopStatus, setStopStatus] = useState<Record<string, StopStatus>>({});
 
-  const stops = group === "A" ? ROUTE.slice(0, 4) : ROUTE.slice(4);
-  const openStops = stops.filter((stop) => !delivered[stop.id]);
-  const directions = mapsUrl(openStops.map((stop) => stop.address));
+  const ready = DAY_TASKS.every((task) => checked[task.id]);
+  const stops = [...ROUTE].sort((a, b) => compareAddresses(a.address, b.address) || a.name.localeCompare(b.name));
+  const nextStop = stops.find((stop) => (stopStatus[stop.id] ?? "waiting") !== "delivered");
+  const gps = nextStop ? followGpsUrl(nextStop.address) : null;
+  const started = Object.values(stopStatus).some((status) => status && status !== "waiting");
   const saturdayDozen = ROUTE.reduce((sum, stop) => sum + stop.dozens, 0);
 
   function addSignup() {
@@ -74,11 +79,26 @@ export function DemoWalkthrough() {
     setSigned(true);
   }
 
-  function packCartons() {
-    setFlock((current) => {
-      if (current.packed) return current;
-      setCartons((count) => count + 12);
-      return { ...current, packed: true };
+  function toggleTask(id: string) {
+    if (started) return;
+    setChecked((current) => {
+      if (current[id]) {
+        if (id === "cartons") setCartons((count) => Math.max(0, count - 12));
+        const next = { ...current };
+        delete next[id];
+        return next;
+      }
+      if (id === "cartons") setCartons((count) => count + 12);
+      return { ...current, [id]: "Gavin" };
+    });
+  }
+
+  function advance(id: string) {
+    if (!ready) return;
+    setStopStatus((current) => {
+      const status = current[id] ?? "waiting";
+      const next = status === "waiting" ? "on_the_way" : status === "on_the_way" ? "arrived" : "delivered";
+      return { ...current, [id]: next };
     });
   }
 
@@ -161,20 +181,23 @@ export function DemoWalkthrough() {
       </section>
 
       <section id="flock" className="grid gap-3">
-        <Caption>Staff click here to mark eggs collected, cleaned, and packed.</Caption>
-        <h2 className="text-xl font-semibold text-forest-deep">Flock work</h2>
-        <label className="flex items-center gap-2 text-sm">
-          <input type="checkbox" checked={flock.collected} onChange={() => setFlock((c) => ({ ...c, collected: !c.collected }))} />
-          Eggs collected
-        </label>
-        <label className="flex items-center gap-2 text-sm">
-          <input type="checkbox" checked={flock.cleaned} onChange={() => setFlock((c) => ({ ...c, cleaned: !c.cleaned }))} />
-          Eggs cleaned
-        </label>
-        <label className="flex items-center gap-2 text-sm">
-          <input type="checkbox" checked={flock.packed} onChange={packCartons} />
-          Packed into cartons
-        </label>
+        <Caption>One shared checklist. Deliveries stay closed until every line is checked.</Caption>
+        <h2 className="text-xl font-semibold text-forest-deep">Before deliveries</h2>
+        <p className="text-sm leading-relaxed">A new day starts unchecked. Gavin and Hollis both see the same checks.</p>
+        {DAY_TASKS.map((task) => (
+          <button
+            key={task.id}
+            type="button"
+            onClick={() => toggleTask(task.id)}
+            className="flex min-h-12 items-center justify-between gap-3 rounded-2xl bg-paper px-3 py-3 text-left text-sm"
+          >
+            <span>
+              <span className="block font-semibold">{task.label}</span>
+              <span className="text-moss">{checked[task.id] ? `Checked by ${checked[task.id]}. Hollis sees it too.` : "Not checked"}</span>
+            </span>
+            <span className="font-semibold">{checked[task.id] ? "Checked" : "Check"}</span>
+          </button>
+        ))}
         <p className="text-sm font-semibold">Cartons on hand: {cartons}</p>
       </section>
 
@@ -195,59 +218,51 @@ export function DemoWalkthrough() {
       </section>
 
       <section id="route" className="grid gap-3">
-        <Caption>Gavin and Hollis open the route, directions, and mark Delivered.</Caption>
+        <Caption>The day’s stops, in driving order. Follow on GPS opens the next stop.</Caption>
         <h2 className="text-xl font-semibold text-forest-deep">Saturday route</h2>
         <p className="text-sm leading-relaxed">
-          Same eight sample stops. Gavin and Hollis share them and switch groups. Not two different jobs.
+          Same eight sample stops, ordered by street and house number. These street names are fake, so Maps may not
+          find them. The list is still here.
         </p>
-        <div className="flex gap-2">
-          <button
-            type="button"
-            onClick={() => setGroup("A")}
-            className={`h-10 flex-1 rounded-xl text-sm font-semibold ${group === "A" ? "bg-forest text-cream" : "bg-paper text-forest"}`}
-          >
-            Group A
-          </button>
-          <button
-            type="button"
-            onClick={() => setGroup("B")}
-            className={`h-10 flex-1 rounded-xl text-sm font-semibold ${group === "B" ? "bg-forest text-cream" : "bg-paper text-forest"}`}
-          >
-            Group B
-          </button>
-        </div>
-        {directions ? (
-          <a href={directions} target="_blank" rel="noopener noreferrer" className="flex h-12 items-center justify-center rounded-2xl bg-sunrise text-sm font-semibold text-ink no-underline">
-            Turn-by-turn directions
+        {gps && ready ? (
+          <a href={gps} target="_blank" rel="noopener noreferrer" className="flex h-12 items-center justify-center rounded-2xl bg-sunrise text-sm font-semibold text-ink no-underline">
+            Follow on GPS
           </a>
         ) : (
-          <p className="text-sm">Every stop in this group is delivered.</p>
+          <p className="text-sm font-semibold">{ready ? "Every sample stop is delivered." : "Checklist first, then Follow on GPS."}</p>
         )}
         <ol className="grid gap-2">
-          {stops.map((stop, index) => (
-            <li key={stop.id} className="rounded-2xl bg-paper px-3 py-3 text-sm">
-              <p className="font-semibold">
-                Stop {group === "A" ? index + 1 : index + 5}
-                {delivered[stop.id] ? " · Delivered" : ""}
-              </p>
-              <p>{stop.name}</p>
-              <p className="text-moss">
-                {stop.dozens} dozen · {stop.cadence}
-              </p>
-              <p>{stop.address}</p>
-              {delivered[stop.id] ? (
-                <p className="mt-2 font-semibold text-forest">Customer sees: Delivered</p>
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => setDelivered((current) => ({ ...current, [stop.id]: true }))}
-                  className="mt-2 h-10 rounded-xl bg-forest px-3 text-sm font-semibold text-cream"
-                >
-                  Mark delivered
-                </button>
-              )}
-            </li>
-          ))}
+          {stops.map((stop, index) => {
+            const status = stopStatus[stop.id] ?? "waiting";
+            const action = status === "waiting" ? "Start stop" : status === "on_the_way" ? "Mark arrived" : status === "arrived" ? "Mark delivered" : "";
+            return (
+              <li key={stop.id} className="rounded-2xl bg-paper px-3 py-3 text-sm">
+                <p className="font-semibold">
+                  Stop {index + 1}
+                  {nextStop?.id === stop.id ? " · Next" : ""}
+                  {status === "delivered" ? " · Delivered" : ""}
+                </p>
+                <p>{stop.name}</p>
+                <p className="text-moss">
+                  {stop.dozens} dozen · {stop.cadence}
+                </p>
+                <p>{stop.address}</p>
+                {status !== "waiting" ? (
+                  <p className="mt-2 font-semibold text-forest">Customer sees: {CUSTOMER_SEES[status]}</p>
+                ) : null}
+                {action ? (
+                  <button
+                    type="button"
+                    disabled={!ready}
+                    onClick={() => advance(stop.id)}
+                    className="mt-2 h-12 rounded-xl bg-forest px-3 text-sm font-semibold text-cream disabled:opacity-50"
+                  >
+                    {action}
+                  </button>
+                ) : null}
+              </li>
+            );
+          })}
         </ol>
       </section>
     </div>

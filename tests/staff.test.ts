@@ -7,7 +7,8 @@ import { readStaffCookie, signStaffCookie } from "../lib/auth";
 import { setCartons, changeCartons } from "../lib/cartons";
 import { openFarm, type FarmStore } from "../lib/db";
 import { ledgerTotals, recordMoney, recordWeeklyPay } from "../lib/ledger";
-import { buildRoute, markStopDelivered, reorderStop, showsDelivered } from "../lib/route";
+import { DAY_TASKS, compareAddresses, followGpsUrl } from "../lib/driving";
+import { arriveStop, buildRoute, customerArrival, markStopDelivered, reorderStop, setDayTask, showsDelivered, startStop } from "../lib/route";
 import type { RequestInput } from "../lib/parse";
 
 function tempFarm(): FarmStore {
@@ -26,6 +27,10 @@ function request(overrides: Partial<RequestInput> = {}): RequestInput {
     weekday: "tue",
     ...overrides,
   };
+}
+
+function readyDay(farm: FarmStore, date: string) {
+  for (const task of DAY_TASKS) farm.checkDayTask(date, task.id, "gavin");
 }
 
 function confirm(farm: FarmStore, input: RequestInput) {
@@ -156,6 +161,7 @@ test("marking a paid order delivered shows Delivered and frees only the one-time
   const interest = farm.insertWaitlist(request({ email: "wait@example.com", name: "Pat Wait", dozens: 1 }));
   assert.equal(farm.capacity().find((day) => day.weekday === "tue")?.remaining, 18);
 
+  readyDay(farm, "2026-11-17");
   const refused = markStopDelivered(farm, interest.id, "2026-11-17");
   assert.equal(refused.ok, false);
   assert.equal(showsDelivered(interest, null), false);
@@ -195,29 +201,33 @@ test("a delivery day lists paid stops in order and says nothing when the day is 
   assert.equal(empty.ok, true);
   if (empty.ok) {
     assert.equal(empty.stops.length, 0);
-    assert.equal(empty.directionsUrl, null);
+    assert.equal(empty.gpsUrl, null);
   }
+
+  const blocked = markStopDelivered(farm, first.id, "2026-11-17");
+  assert.equal(blocked.ok, false);
+  readyDay(farm, "2026-11-17");
 
   const before = buildRoute(farm, "2026-11-17");
   assert.equal(before.ok, true);
   if (!before.ok) return;
   assert.deepEqual(
-    before.stops.map((stop) => stop.signup.id),
-    [first.id, second.id],
+    before.stops.map((stop) => stop.signup.name),
+    ["June Beach", "Ada Marsh"],
   );
   assert.equal(before.stops.every((stop) => stop.signup.kind === "order"), true);
-  assert.match(before.directionsUrl ?? "", /^https:\/\/www\.google\.com\/maps\/dir\//);
-  assert.match(decodeURIComponent(before.directionsUrl ?? ""), /18 Ocean Blvd.*4 Corona Rd/);
+  assert.equal(before.gpsUrl, followGpsUrl("4 Corona Rd, Ponte Vedra Beach, FL 32082"));
+  assert.equal(before.ready, true);
 
-  reorderStop(farm, "2026-11-17", first.id, "down");
+  reorderStop(farm, "2026-11-17", second.id, "down");
   const after = buildRoute(farm, "2026-11-17");
   assert.equal(after.ok, true);
   if (!after.ok) return;
   assert.deepEqual(
     after.stops.map((stop) => stop.signup.name),
-    ["June Beach", "Ada Marsh"],
+    ["Ada Marsh", "June Beach"],
   );
-  assert.match(decodeURIComponent(after.directionsUrl ?? ""), /4 Corona Rd.*18 Ocean Blvd/);
+  assert.equal(after.gpsUrl, followGpsUrl("18 Ocean Blvd, Ponte Vedra Beach, FL 32082"));
 
   markStopDelivered(farm, first.id, "2026-11-17");
   const driven = buildRoute(farm, "2026-11-17");
@@ -225,11 +235,38 @@ test("a delivery day lists paid stops in order and says nothing when the day is 
   if (!driven.ok) return;
   const ada = driven.stops.find((stop) => stop.signup.id === first.id);
   assert.equal(ada?.delivered, true);
-  assert.match(decodeURIComponent(driven.directionsUrl ?? ""), /4 Corona Rd/);
-  assert.doesNotMatch(decodeURIComponent(driven.directionsUrl ?? ""), /18 Ocean Blvd/);
+  assert.equal(driven.gpsUrl, followGpsUrl("4 Corona Rd, Ponte Vedra Beach, FL 32082"));
 
   const sunday = buildRoute(farm, "2026-11-15");
   assert.equal(sunday.ok, false);
+  farm.close();
+});
+
+test("the shared checklist blocks the route until the day is checked, and a new day starts open", () => {
+  const farm = tempFarm();
+  const order = confirm(farm, request());
+  const early = startStop(farm, order.id, "2026-11-17", "hollis");
+  assert.equal(early.ok, false);
+
+  const feed = setDayTask(farm, "2026-11-17", "feed", "gavin", true);
+  assert.equal(feed.ok, true);
+  assert.equal(farm.dayTasks("2026-11-17")[0]?.staffId, "gavin");
+  assert.equal(farm.dayTasks("2026-11-18").length, 0);
+
+  readyDay(farm, "2026-11-17");
+  assert.equal(startStop(farm, order.id, "2026-11-17", "hollis").ok, true);
+  assert.equal(customerArrival(farm, order), "on_the_way");
+  assert.equal(arriveStop(farm, order.id, "2026-11-17", "hollis").ok, true);
+  assert.equal(customerArrival(farm, order), "arrived");
+  const undone = setDayTask(farm, "2026-11-17", "feed", "gavin", false);
+  assert.equal(undone.ok, false);
+  assert.equal(markStopDelivered(farm, order.id, "2026-11-17").ok, true);
+  const saved = farm.getSignup(order.id);
+  assert.equal(saved ? customerArrival(farm, saved) : null, "delivered");
+  assert.equal(saved?.status, "fulfilled");
+
+  const otherStreets = ["9 Zebra Ln", "2 Apple St", "15 Apple St"].sort(compareAddresses);
+  assert.deepEqual(otherStreets, ["2 Apple St", "15 Apple St", "9 Zebra Ln"]);
   farm.close();
 });
 

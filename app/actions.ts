@@ -18,7 +18,7 @@ import {
 import { recordMoney, recordWeeklyPay } from "@/lib/ledger";
 import { placeEarlyAccess, placeOrder } from "@/lib/orders";
 import { parseEarlyAccess, parseForm } from "@/lib/parse";
-import { markStopDelivered, reorderStop } from "@/lib/route";
+import { arriveStop, markStopDelivered, reorderStop, setDayTask, startStop } from "@/lib/route";
 
 function refreshFarm() {
   revalidatePath("/", "layout");
@@ -224,15 +224,46 @@ export async function adjustCartonCount(
   return { ok: `${saved.count} cartons on hand.` };
 }
 
+function routeRedirect(date: string, error?: string): never {
+  const query = new URLSearchParams({ date });
+  if (error) query.set("error", error);
+  redirect(`/staff/route?${query}`);
+}
+
+export async function toggleDayTask(formData: FormData): Promise<void> {
+  const staffId = await requireStaff();
+  const date = String(formData.get("date") ?? "");
+  const task = String(formData.get("task") ?? "");
+  const saved = setDayTask(getFarm(), date, task, staffId, formData.get("checked") !== "no");
+  refreshFarm();
+  routeRedirect(date, saved.ok ? undefined : saved.error);
+}
+
+export async function startDelivery(formData: FormData): Promise<void> {
+  const staffId = await requireStaff();
+  const date = String(formData.get("date") ?? "");
+  const id = String(formData.get("id") ?? "");
+  const saved = startStop(getFarm(), id, date, staffId);
+  refreshFarm();
+  routeRedirect(date, saved.ok ? undefined : saved.error);
+}
+
+export async function arriveDelivery(formData: FormData): Promise<void> {
+  const staffId = await requireStaff();
+  const date = String(formData.get("date") ?? "");
+  const id = String(formData.get("id") ?? "");
+  const saved = arriveStop(getFarm(), id, date, staffId);
+  refreshFarm();
+  routeRedirect(date, saved.ok ? undefined : saved.error);
+}
+
 export async function markDelivered(formData: FormData): Promise<void> {
   await requireStaff();
   const date = String(formData.get("date") ?? "");
   const id = String(formData.get("id") ?? "");
   const saved = markStopDelivered(getFarm(), id, date);
   refreshFarm();
-  const query = new URLSearchParams({ date });
-  if (!saved.ok) query.set("error", saved.error);
-  redirect(`/staff/route?${query}`);
+  routeRedirect(date, saved.ok ? undefined : saved.error);
 }
 
 export async function moveStop(formData: FormData): Promise<void> {
@@ -241,7 +272,5 @@ export async function moveStop(formData: FormData): Promise<void> {
   const id = String(formData.get("id") ?? "");
   const direction = formData.get("direction") === "down" ? "down" : "up";
   const saved = reorderStop(getFarm(), date, id, direction);
-  const query = new URLSearchParams({ date });
-  if (!saved.ok) query.set("error", saved.error);
-  redirect(`/staff/route?${query}`);
+  routeRedirect(date, saved.ok ? undefined : saved.error);
 }

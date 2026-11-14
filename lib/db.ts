@@ -16,6 +16,7 @@ import {
 import { validateEarlyAccess, validateRequest, type EarlyAccessInput, type RequestInput } from "./parse";
 
 export type SignupStatus = "interest" | "pending_payment" | "confirmed" | "canceled" | "fulfilled";
+export type StopState = "on_the_way" | "arrived";
 export type SignupKind = "waitlist" | "order";
 export type LedgerDirection = "in" | "out";
 export type LedgerCategory = "egg_sales" | "feed" | "cartons" | "gas" | "other" | "pay";
@@ -115,6 +116,21 @@ CREATE TABLE IF NOT EXISTS route_order (
   signup_id TEXT NOT NULL,
   position INTEGER NOT NULL,
   PRIMARY KEY (weekday, signup_id)
+);
+CREATE TABLE IF NOT EXISTS day_tasks (
+  work_date TEXT NOT NULL,
+  task TEXT NOT NULL,
+  staff_id TEXT NOT NULL,
+  checked_at TEXT NOT NULL,
+  PRIMARY KEY (work_date, task)
+);
+CREATE TABLE IF NOT EXISTS stop_progress (
+  work_date TEXT NOT NULL,
+  signup_id TEXT NOT NULL,
+  state TEXT NOT NULL,
+  staff_id TEXT NOT NULL,
+  updated_at TEXT NOT NULL,
+  PRIMARY KEY (work_date, signup_id)
 );
 `;
 
@@ -560,6 +576,105 @@ export class FarmStore {
       .prepare("INSERT INTO route_order (weekday, signup_id, position) VALUES (?, ?, ?)")
       .run(weekday, signupId, position);
     return position;
+  }
+
+  hasRoutePosition(weekday: Weekday, signupId: string): boolean {
+    return Boolean(
+      this.db.prepare("SELECT position FROM route_order WHERE weekday = ? AND signup_id = ?").get(weekday, signupId),
+    );
+  }
+
+  maxRoutePosition(weekday: Weekday): number {
+    const row = this.db.prepare("SELECT COALESCE(MAX(position), 0) AS n FROM route_order WHERE weekday = ?").get(weekday);
+    return Number(row?.n ?? 0);
+  }
+
+  setRoutePosition(weekday: Weekday, signupId: string, position: number): void {
+    this.db
+      .prepare(
+        `INSERT INTO route_order (weekday, signup_id, position) VALUES (?, ?, ?)
+         ON CONFLICT (weekday, signup_id) DO UPDATE SET position = excluded.position`,
+      )
+      .run(weekday, signupId, position);
+  }
+
+  dayTasks(workDate: string): { task: string; staffId: string; checkedAt: string }[] {
+    return this.db
+      .prepare("SELECT task, staff_id, checked_at FROM day_tasks WHERE work_date = ? ORDER BY checked_at ASC")
+      .all(workDate)
+      .map((row) => ({
+        task: text(row, "task"),
+        staffId: text(row, "staff_id"),
+        checkedAt: text(row, "checked_at"),
+      }));
+  }
+
+  checklistComplete(workDate: string): boolean {
+    const row = this.db.prepare("SELECT COUNT(*) AS n FROM day_tasks WHERE work_date = ?").get(workDate);
+    return Number(row?.n ?? 0) >= 3;
+  }
+
+  checkDayTask(workDate: string, task: string, staffId: string, now = new Date()): void {
+    this.db
+      .prepare(
+        `INSERT INTO day_tasks (work_date, task, staff_id, checked_at) VALUES (?, ?, ?, ?)
+         ON CONFLICT (work_date, task) DO UPDATE SET staff_id = excluded.staff_id, checked_at = excluded.checked_at`,
+      )
+      .run(workDate, task, staffId, now.toISOString());
+  }
+
+  clearDayTask(workDate: string, task: string): void {
+    this.db.prepare("DELETE FROM day_tasks WHERE work_date = ? AND task = ?").run(workDate, task);
+  }
+
+  routeStarted(workDate: string): boolean {
+    const progress = this.db.prepare("SELECT signup_id FROM stop_progress WHERE work_date = ? LIMIT 1").get(workDate);
+    if (progress) return true;
+    const delivery = this.db.prepare("SELECT id FROM deliveries WHERE delivered_on = ? LIMIT 1").get(workDate);
+    return Boolean(delivery);
+  }
+
+  stopStates(workDate: string): Map<string, { state: StopState; staffId: string }> {
+    const rows = this.db
+      .prepare("SELECT signup_id, state, staff_id FROM stop_progress WHERE work_date = ?")
+      .all(workDate);
+    const found = new Map<string, { state: StopState; staffId: string }>();
+    for (const row of rows) {
+      const state = text(row, "state");
+      if (state === "on_the_way" || state === "arrived") {
+        found.set(text(row, "signup_id"), { state, staffId: text(row, "staff_id") });
+      }
+    }
+    return found;
+  }
+
+  setStopState(workDate: string, signupId: string, state: StopState, staffId: string, now = new Date()): void {
+    this.db
+      .prepare(
+        `INSERT INTO stop_progress (work_date, signup_id, state, staff_id, updated_at) VALUES (?, ?, ?, ?, ?)
+         ON CONFLICT (work_date, signup_id) DO UPDATE SET state = excluded.state, staff_id = excluded.staff_id, updated_at = excluded.updated_at`,
+      )
+      .run(workDate, signupId, state, staffId, now.toISOString());
+  }
+
+  latestStopProgress(signupId: string): { workDate: string; state: StopState; staffId: string } | null {
+    const row = this.db
+      .prepare(
+        `SELECT work_date, state, staff_id FROM stop_progress
+         WHERE signup_id = ? ORDER BY work_date DESC, updated_at DESC LIMIT 1`,
+      )
+      .get(signupId);
+    if (!row) return null;
+    const state = text(row, "state");
+    if (state !== "on_the_way" && state !== "arrived") return null;
+    return { workDate: text(row, "work_date"), state, staffId: text(row, "staff_id") };
+  }
+
+  waitlistCount(): number {
+    const row = this.db
+      .prepare("SELECT COUNT(*) AS n FROM signups WHERE kind = 'waitlist' AND status = 'interest'")
+      .get();
+    return Number(row?.n ?? 0);
   }
 
   swapRoutePositions(weekday: Weekday, firstId: string, secondId: string): void {

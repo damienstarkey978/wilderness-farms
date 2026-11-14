@@ -3,7 +3,7 @@ import { connection } from "next/server";
 import { formatDollars, WEEKDAY_LABEL, isWeekday } from "@/lib/constants";
 import { getFarm, type Signup } from "@/lib/db";
 import { reservationSentence, settleCheckout } from "@/lib/orders";
-import { showsDelivered } from "@/lib/route";
+import { customerArrival, showsDelivered } from "@/lib/route";
 
 export const metadata = { title: "Payment" };
 
@@ -31,10 +31,23 @@ export default async function SuccessPage(props: {
   }
   const deliveredOn = signup ? farm.latestDeliveryOn(signup.id) : null;
   const delivered = signup ? showsDelivered(signup, deliveredOn) : false;
+  const arrival = signup ? customerArrival(farm, signup) : null;
 
   return (
     <div className="mx-auto max-w-lg px-5 pt-10">
-      {signup && delivered ? (
+      {signup && arrival === "on_the_way" ? (
+        <>
+          <p className="text-sm font-semibold text-sunrise">On the way</p>
+          <h1 className="mt-2 text-4xl font-semibold tracking-tight text-forest-deep">On the way, {signup.name}.</h1>
+          <p className="mt-3 text-[15px] leading-relaxed">Your stop has started. Nothing new was charged.</p>
+        </>
+      ) : signup && arrival === "arrived" ? (
+        <>
+          <p className="text-sm font-semibold text-sunrise">Arrived</p>
+          <h1 className="mt-2 text-4xl font-semibold tracking-tight text-forest-deep">Arrived, {signup.name}.</h1>
+          <p className="mt-3 text-[15px] leading-relaxed">The delivery is at your door. Nothing new was charged.</p>
+        </>
+      ) : signup && delivered ? (
         <>
           <p className="text-sm font-semibold text-sunrise">Delivered</p>
           <h1 className="mt-2 text-4xl font-semibold tracking-tight text-forest-deep">Delivered, {signup.name}.</h1>
