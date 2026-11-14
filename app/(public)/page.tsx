@@ -62,8 +62,7 @@ export default async function HomePage() {
       <section className="md:hidden">
         <PhoneWordmark />
         <div className="px-5 pt-2">
-          <p className="text-center text-xs font-medium tracking-[0.18em] text-sage uppercase">Ponte Vedra Beach</p>
-          <h1 className="mt-3 font-serif text-[2.65rem] leading-[1.05] text-forest">
+          <h1 className="font-serif text-[2.65rem] leading-[1.05] text-forest">
             Farm Fresh Eggs. Delivered to Your Door.
           </h1>
           <p className="mt-3 text-base leading-relaxed text-ink/80">
