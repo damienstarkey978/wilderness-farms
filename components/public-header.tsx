@@ -25,15 +25,13 @@ export function PublicHeader() {
 
   return (
     <header
-      className={`sticky top-0 z-40 border-b transition-colors ${
-        pathname === "/" ? "hidden md:block" : ""
-      } ${
+      className={`sticky top-0 z-40 hidden border-b transition-colors md:block ${
         scrolled ? "border-beige/80 bg-white/95 shadow-[0_8px_24px_rgb(37_42_36_/_6%)] backdrop-blur" : "border-transparent bg-cream"
       }`}
     >
       <div className="mx-auto flex h-16 max-w-[1200px] items-center gap-4 px-5 md:h-[4.75rem] md:px-8">
         <Link href="/" className="mx-auto shrink-0 no-underline md:mx-0" aria-label="Wilderness Farms home">
-          <Image src="/logo.webp" alt="Wilderness Farms" width={168} height={154} priority className="h-12 w-auto" />
+          <Image src="/logo-wordmark.webp" alt="Wilderness Farms" width={760} height={200} priority className="h-14 w-auto" />
         </Link>
         <nav className="ml-auto hidden items-center gap-8 md:flex" aria-label="Primary">
           {LINKS.map((link) => {

@@ -24,12 +24,12 @@ export function classifyAddress(address: string): { flag: AddressFlag; note: str
   if (ponte) {
     return {
       flag: "nearby_undecided",
-      note: "Regular Ponte Vedra is not decided yet. We'll keep this address and flag it. Delivery there is not a yes, and it is not a no.",
+      note: "Regular Ponte Vedra is not on the first route. You can still sign up, and we'll alert you when we serve your area.",
     };
   }
 
   return {
     flag: "outside",
-    note: "This address does not look like Ponte Vedra Beach. We'll keep it and flag it. We are not delivering there yet.",
+    note: "You can still sign up. We'll alert you when we serve your area.",
   };
 }

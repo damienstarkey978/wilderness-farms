@@ -59,21 +59,15 @@ export default async function HomePage() {
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <section className="md:hidden">
-        <div className="px-5 pt-8">
-          <Image
-            src="/logo.webp"
-            alt="Wilderness Farms"
-            width={760}
-            height={695}
-            priority
-            className="mx-auto h-auto w-[17.5rem]"
-          />
-          <p className="mt-6 text-center text-xs font-medium tracking-[0.18em] text-sage uppercase">Ponte Vedra Beach</p>
+        <div className="px-5 pt-5">
+          <p className="text-center text-xs font-medium tracking-[0.18em] text-sage uppercase">Ponte Vedra Beach</p>
           <h1 className="mt-3 font-serif text-[2.65rem] leading-[1.05] text-forest">
             Farm Fresh Eggs. Delivered to Your Door.
           </h1>
           <p className="mt-3 text-base leading-relaxed text-ink/80">
-            Fresh eggs from our small farm, brought to your door. $10 a dozen.
+            Fresh eggs from our small farm, brought to your door. $10 a dozen. First deliveries are only in Ponte
+            Vedra Beach. We may expand later. If you live outside Ponte Vedra Beach, you can still sign up, and we
+            will alert you when we serve your area.
           </p>
         </div>
         <Image
@@ -113,7 +107,9 @@ export default async function HomePage() {
             Farm Fresh Eggs. Delivered to Your Door.
           </h1>
           <p className="mt-5 max-w-xl text-lg leading-relaxed text-ink/80">
-            Fresh, locally raised eggs from our small family farm, delivered straight to your doorstep.
+            Fresh, locally raised eggs from our small family farm, delivered straight to your doorstep. First
+            deliveries are only in Ponte Vedra Beach. We may expand later. If you live outside Ponte Vedra Beach, you
+            can still sign up, and we will alert you when we serve your area.
           </p>
           <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
             <Link

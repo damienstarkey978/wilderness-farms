@@ -17,7 +17,7 @@ const items = [
   {
     question: "Where do you deliver?",
     answer:
-      "Ponte Vedra Beach, Florida, Monday through Saturday. We do not deliver on Sunday. Regular Ponte Vedra is not decided yet.",
+      "First deliveries are only in Ponte Vedra Beach, Monday through Saturday. We do not deliver on Sunday. We may expand later.",
   },
   {
     question: "Does it cost anything to join?",
@@ -36,7 +36,7 @@ const items = [
   {
     question: "What if my ZIP is outside Ponte Vedra Beach?",
     answer:
-      "We'll still keep your signup and flag the ZIP. Delivery outside Ponte Vedra Beach is not confirmed.",
+      "You can still sign up. We'll alert you when we serve your area.",
   },
 ];
 

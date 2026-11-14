@@ -60,7 +60,7 @@ export function SignupForm({
   if (!greenlit) {
     return (
       <form action={action} className={shell}>
-        <p className="text-sm text-ink/70">Name, email, and ZIP are required. Everything else can wait.</p>
+        <p className="text-sm leading-relaxed text-ink/70">Name, email, and ZIP are required. Everything else can wait.</p>
         {state && !state.ok ? (
           <p className="rounded-xl bg-[#f8e4d4] px-4 py-3 text-bark" role="alert">
             {state.error}

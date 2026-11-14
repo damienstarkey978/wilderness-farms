@@ -34,7 +34,7 @@ export default async function SignupPage(props: {
         <p className="mt-5 text-lg leading-relaxed text-ink/80">
           {greenlit
             ? "Choose a day, Monday through Saturday, and pay by card. Nothing is charged unless Stripe confirms the payment."
-            : `Name, email, and ZIP are enough to join. First eggs are expected ${LAYING_START}. Joining is free and does not reserve eggs.`}
+            : `Name, email, and ZIP are enough to join. First eggs are expected ${LAYING_START}. First deliveries are only in Ponte Vedra Beach. We may expand later. If you live outside Ponte Vedra Beach, you can still sign up, and we will alert you when we serve your area. Joining is free and does not reserve eggs.`}
         </p>
       </div>
       <div className="px-3 pt-3 md:p-0">
@@ -46,7 +46,7 @@ export default async function SignupPage(props: {
           <p className="mt-2 mb-5 text-base leading-relaxed text-ink/75 md:hidden">
             {greenlit
               ? "Monday through Saturday. Nothing is charged unless the card payment goes through."
-              : `Name, email, and ZIP. Free to join. First eggs expected ${LAYING_START}.`}
+              : `Name, email, and ZIP. Free to join. First eggs expected ${LAYING_START}. First deliveries are only in Ponte Vedra Beach. We may expand later. If you live outside Ponte Vedra Beach, you can still sign up, and we will alert you when we serve your area.`}
           </p>
           <SignupForm
             greenlit={greenlit}

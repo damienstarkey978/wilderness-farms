@@ -121,6 +121,24 @@ test("early access saves name, email, and ZIP without reserving eggs", () => {
   farm.close();
 });
 
+test("early access keeps a signup from outside Ponte Vedra Beach", () => {
+  const farm = tempFarm();
+  const saved = placeEarlyAccess(
+    farm,
+    early({
+      email: "out@example.com",
+      zip: "32250",
+      address: "10 Beach Blvd, Jacksonville Beach, FL",
+    }),
+  );
+  assert.equal(saved.ok, true);
+  if (!saved.ok) return;
+  assert.equal(saved.signup.zip, "32250");
+  assert.equal(saved.signup.addressFlag, "outside");
+  assert.equal(saved.signup.status, "interest");
+  farm.close();
+});
+
 test("early access rejects a missing ZIP and an over-cap estimate", () => {
   const farm = tempFarm();
   const missing = placeEarlyAccess(farm, early({ zip: "82" }));

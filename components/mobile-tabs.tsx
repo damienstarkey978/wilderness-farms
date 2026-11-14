@@ -20,7 +20,7 @@ export function MobileTabs() {
       style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
       aria-label="App"
     >
-      <ul className="mx-auto grid h-[4.5rem] max-w-[1200px] grid-cols-5">
+      <ul className="mx-auto grid h-[6.25rem] max-w-[1200px] grid-cols-5">
         {TABS.map((tab) => {
           const active = pathname === tab.href;
           return (
@@ -28,7 +28,7 @@ export function MobileTabs() {
               <Link
                 href={tab.href}
                 aria-current={active ? "page" : undefined}
-                className={`flex h-[4.5rem] flex-col items-center justify-center gap-1 px-0.5 text-center text-[10px] leading-none tracking-tight no-underline ${
+                className={`flex h-[6.25rem] flex-col items-center justify-center gap-1.5 px-1 text-center text-[13px] leading-[1.15] tracking-tight no-underline ${
                   active ? "font-semibold text-forest" : "font-medium text-sage"
                 }`}
               >
@@ -46,21 +46,21 @@ export function MobileTabs() {
 function TabIcon({ name, active }: { name: string; active: boolean }) {
   const stroke = active ? "#304A35" : "#83977B";
   return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" aria-hidden="true">
       {name === "Home" ? (
-        <path d="M4 10.5 12 4l8 6.5V20a1 1 0 0 1-1 1h-5v-6H10v6H5a1 1 0 0 1-1-1v-9.5Z" stroke={stroke} strokeWidth="1.8" />
+        <path d="M4 10.5 12 4l8 6.5V20a1 1 0 0 1-1 1h-5v-6H10v6H5a1 1 0 0 1-1-1v-9.5Z" stroke={stroke} strokeWidth="2" />
       ) : null}
       {name === "Farm" ? (
-        <path d="M12 20s6-3.2 6-8a6 6 0 1 0-12 0c0 4.8 6 8 6 8Z" stroke={stroke} strokeWidth="1.8" />
+        <path d="M12 20s6-3.2 6-8a6 6 0 1 0-12 0c0 4.8 6 8 6 8Z" stroke={stroke} strokeWidth="2" />
       ) : null}
       {name === "How it works" ? (
-        <path d="M5 7h14M5 12h14M5 17h9" stroke={stroke} strokeWidth="1.8" strokeLinecap="round" />
+        <path d="M5 7h14M5 12h14M5 17h9" stroke={stroke} strokeWidth="2" strokeLinecap="round" />
       ) : null}
       {name === "FAQ" ? (
-        <path d="M12 17h.01M9.5 9a2.5 2.5 0 1 1 3.7 2.2c-.7.4-1.2 1-1.2 1.8V14" stroke={stroke} strokeWidth="1.8" strokeLinecap="round" />
+        <path d="M12 17h.01M9.5 9a2.5 2.5 0 1 1 3.7 2.2c-.7.4-1.2 1-1.2 1.8V14" stroke={stroke} strokeWidth="2" strokeLinecap="round" />
       ) : null}
       {name === "Join" ? (
-        <path d="M12 6v12M6 12h12" stroke={stroke} strokeWidth="1.8" strokeLinecap="round" />
+        <path d="M12 6v12M6 12h12" stroke={stroke} strokeWidth="2" strokeLinecap="round" />
       ) : null}
     </svg>
   );
