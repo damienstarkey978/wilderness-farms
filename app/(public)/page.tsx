@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { connection } from "next/server";
 import { EarlyAccessBand } from "@/components/early-access-band";
+import { PhoneWordmark } from "@/components/phone-wordmark";
 import { LAYING_START } from "@/lib/constants";
 import { getFarm } from "@/lib/db";
 
@@ -59,7 +60,8 @@ export default async function HomePage() {
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <section className="md:hidden">
-        <div className="px-5 pt-5">
+        <PhoneWordmark />
+        <div className="px-5 pt-2">
           <p className="text-center text-xs font-medium tracking-[0.18em] text-sage uppercase">Ponte Vedra Beach</p>
           <h1 className="mt-3 font-serif text-[2.65rem] leading-[1.05] text-forest">
             Farm Fresh Eggs. Delivered to Your Door.

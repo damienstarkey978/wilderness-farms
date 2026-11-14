@@ -1,5 +1,6 @@
 import { connection } from "next/server";
 import { SignupForm } from "@/app/(public)/signup/signup-form";
+import { PhoneWordmark } from "@/components/phone-wordmark";
 import { LAYING_START } from "@/lib/constants";
 import { getFarm } from "@/lib/db";
 import { paymentsConfigured } from "@/lib/stripe";
@@ -24,6 +25,7 @@ export default async function SignupPage(props: {
 
   return (
     <div className="md:mx-auto md:grid md:max-w-[1100px] md:grid-cols-[0.9fr_1.1fr] md:items-start md:gap-12 md:px-8 md:py-24">
+      <PhoneWordmark />
       <div className="hidden md:block">
         <p className="text-xs font-medium tracking-[0.18em] text-sage uppercase">
           {greenlit ? "Orders" : "Early access"}

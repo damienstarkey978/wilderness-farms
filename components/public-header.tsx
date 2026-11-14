@@ -31,7 +31,14 @@ export function PublicHeader() {
     >
       <div className="mx-auto flex max-w-[1200px] items-center gap-4 px-8 py-3">
         <Link href="/" className="mx-auto shrink-0 no-underline md:mx-0" aria-label="Wilderness Farms home">
-          <Image src="/logo.webp" alt="Wilderness Farms" width={760} height={695} priority className="h-auto w-[4.5rem]" />
+          <Image
+            src="/wilderness-farms-wordmark.jpg"
+            alt="Wilderness Farms, Ponte Vedra Beach, Florida"
+            width={2172}
+            height={724}
+            priority
+            className="h-auto w-[15rem] max-w-full"
+          />
         </Link>
         <nav className="ml-auto hidden items-center gap-8 md:flex" aria-label="Primary">
           {LINKS.map((link) => {
