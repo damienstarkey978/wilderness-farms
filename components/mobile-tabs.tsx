@@ -9,6 +9,7 @@ const TABS = [
   { href: "/how-it-works", label: "How it works" },
   { href: "/faq", label: "FAQ" },
   { href: "/signup", label: "Join" },
+  { href: "/staff", label: "Staff" },
 ] as const;
 
 export function MobileTabs() {
@@ -20,9 +21,9 @@ export function MobileTabs() {
       style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
       aria-label="App"
     >
-      <ul className="mx-auto grid h-[6.25rem] max-w-[1200px] grid-cols-5">
+      <ul className="mx-auto grid h-[6.25rem] max-w-[1200px] grid-cols-6">
         {TABS.map((tab) => {
-          const active = pathname === tab.href;
+          const active = tab.href === "/staff" ? pathname.startsWith("/staff") : pathname === tab.href;
           return (
             <li key={tab.href}>
               <Link
@@ -61,6 +62,9 @@ function TabIcon({ name, active }: { name: string; active: boolean }) {
       ) : null}
       {name === "Join" ? (
         <path d="M12 6v12M6 12h12" stroke={stroke} strokeWidth="2" strokeLinecap="round" />
+      ) : null}
+      {name === "Staff" ? (
+        <path d="M12 12a3.2 3.2 0 1 0-3.2-3.2A3.2 3.2 0 0 0 12 12Zm-5.5 7.5a5.5 5.5 0 0 1 11 0" stroke={stroke} strokeWidth="2" strokeLinecap="round" />
       ) : null}
     </svg>
   );

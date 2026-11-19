@@ -43,7 +43,7 @@ export default async function RoutePage(props: {
       <header className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <p className="text-sm font-extrabold uppercase tracking-[0.16em] text-moss">Staff desk</p>
-          <h1 className="display text-4xl text-forest-deep">Today&apos;s work</h1>
+          <h1 className="font-serif text-4xl text-forest">Today&apos;s work</h1>
           <p className="mt-1 text-sm text-moss">Signed in as {staffName(staffId)}. One shared list for the day.</p>
         </div>
         <Link className="btn quiet" href="/staff">
@@ -51,7 +51,7 @@ export default async function RoutePage(props: {
         </Link>
       </header>
 
-      <form className="paper flex flex-wrap items-end gap-3 px-5 py-5" method="get">
+      <form className="rounded-[18px] bg-white shadow-[0_10px_30px_rgb(37_42_36_/_6%)] flex flex-wrap items-end gap-3 px-5 py-5" method="get">
         <label className="field min-w-48 flex-1">
           <span>Delivery day</span>
           <input name="date" type="date" defaultValue={date} required />
@@ -67,8 +67,8 @@ export default async function RoutePage(props: {
         </p>
       ) : null}
 
-      <section className="paper px-5 py-5">
-        <h2 className="display text-3xl text-forest-deep">Before deliveries</h2>
+      <section className="rounded-[18px] bg-white shadow-[0_10px_30px_rgb(37_42_36_/_6%)] px-5 py-5">
+        <h2 className="font-serif text-3xl text-forest">Before deliveries</h2>
         <p className="mt-2 text-sm leading-relaxed text-moss">
           Feed, harvest, and cartons have to be checked before this day&apos;s deliveries can start. A new day starts
           unchecked. Whoever checks a line, the rest of the desk can see it.
@@ -99,14 +99,14 @@ export default async function RoutePage(props: {
       </section>
 
       {!route.ok ? (
-        <p className="paper px-5 py-6">{route.error}</p>
+        <p className="rounded-[18px] bg-white shadow-[0_10px_30px_rgb(37_42_36_/_6%)] px-5 py-6">{route.error}</p>
       ) : route.stops.length === 0 ? (
-        <p className="paper px-5 py-6">No stops this day.</p>
+        <p className="rounded-[18px] bg-white shadow-[0_10px_30px_rgb(37_42_36_/_6%)] px-5 py-6">No stops this day.</p>
       ) : (
         <>
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
-              <h2 className="display text-3xl text-forest-deep">{WEEKDAY_LABEL[route.weekday]} route</h2>
+              <h2 className="font-serif text-3xl text-forest">{WEEKDAY_LABEL[route.weekday]} route</h2>
               <p className="mt-1 text-sm text-moss">Ordered by street, then house number. Move a stop if the day needs a different path.</p>
             </div>
             {route.gpsUrl && route.ready ? (
@@ -130,7 +130,7 @@ export default async function RoutePage(props: {
                     : null;
               const next = route.stops.find((item) => !item.delivered);
               return (
-                <li key={stop.signup.id} className="paper px-5 py-4">
+                <li key={stop.signup.id} className="rounded-[18px] bg-white shadow-[0_10px_30px_rgb(37_42_36_/_6%)] px-5 py-4">
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div>
                       <p className="text-sm font-extrabold uppercase tracking-[0.14em] text-moss">

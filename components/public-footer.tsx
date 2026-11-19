@@ -6,6 +6,7 @@ const LINKS = [
   { href: "/how-it-works", label: "How It Works" },
   { href: "/faq", label: "FAQ" },
   { href: "/signup", label: "Join Early Access" },
+  { href: "/staff", label: "Staff" },
 ];
 
 export function PublicFooter() {

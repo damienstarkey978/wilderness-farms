@@ -1,17 +1,16 @@
-import { connection } from "next/server";
-import { SiteFooter } from "@/components/site-footer";
-import { SiteHeader } from "@/components/site-header";
-import { getFarm } from "@/lib/db";
+import { MobileTabs } from "@/components/mobile-tabs";
+import { PhoneWordmark } from "@/components/phone-wordmark";
+import { PublicFooter } from "@/components/public-footer";
+import { PublicHeader } from "@/components/public-header";
 
-export default async function StaffLayout({ children }: { children: React.ReactNode }) {
-  await connection();
-  const greenlit = getFarm().getGreenlit();
-
+export default function StaffLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex min-h-full flex-col">
-      <SiteHeader greenlit={greenlit} />
+    <div className="flex min-h-dvh flex-col bg-cream pb-[calc(7.25rem+env(safe-area-inset-bottom))] text-ink md:pb-0">
+      <PublicHeader />
+      <PhoneWordmark />
       <main className="flex-1">{children}</main>
-      <SiteFooter />
+      <PublicFooter />
+      <MobileTabs />
     </div>
   );
 }

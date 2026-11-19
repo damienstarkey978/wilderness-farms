@@ -13,8 +13,12 @@ export default async function StaffLoginPage() {
   const jar = await cookies();
   if (readStaffCookie(jar.get(STAFF_COOKIE)?.value)) redirect("/staff");
   return (
-    <div className="mx-auto max-w-5xl px-5 py-12">
-      <StaffLoginForm />
+    <div className="md:mx-auto md:max-w-xl md:px-8 md:py-16">
+      <div className="px-3 pt-3 md:p-0">
+        <div className="rounded-[28px] bg-white px-5 pt-6 pb-6 shadow-[0_16px_40px_rgb(37_42_36_/_8%)] md:rounded-[18px] md:p-10 md:shadow-[0_10px_30px_rgb(37_42_36_/_6%)]">
+          <StaffLoginForm />
+        </div>
+      </div>
     </div>
   );
 }

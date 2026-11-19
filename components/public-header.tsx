@@ -10,6 +10,7 @@ const LINKS = [
   { href: "/our-farm", label: "Our Farm" },
   { href: "/how-it-works", label: "How It Works" },
   { href: "/faq", label: "FAQ" },
+  { href: "/staff", label: "Staff" },
 ];
 
 export function PublicHeader() {
@@ -42,7 +43,7 @@ export function PublicHeader() {
         </Link>
         <nav className="ml-auto hidden items-center gap-8 md:flex" aria-label="Primary">
           {LINKS.map((link) => {
-            const active = pathname === link.href;
+            const active = link.href === "/staff" ? pathname.startsWith("/staff") : pathname === link.href;
             return (
               <Link
                 key={link.href}

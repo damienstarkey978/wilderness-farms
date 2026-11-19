@@ -78,7 +78,7 @@ export function PayForm() {
   const [state, action, pending] = useActionState(addWeeklyPay, null);
   return (
     <form action={action} className="grid gap-3">
-      <h3 className="display text-3xl text-forest-deep">Weekly pay</h3>
+      <h3 className="font-serif text-3xl text-forest">Weekly pay</h3>
       <p>Enter the amount for the week. Leave a name blank to skip that person. Both can be paid in the same week.</p>
       <Alert state={state} />
       <label className="field">

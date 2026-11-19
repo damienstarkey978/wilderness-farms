@@ -38,7 +38,7 @@ export default async function StaffPage() {
       <header className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <p className="text-sm font-extrabold uppercase tracking-[0.16em] text-moss">Staff desk</p>
-          <h1 className="display text-4xl text-forest-deep">Signed in as {staffName(staffId)}</h1>
+          <h1 className="font-serif text-4xl text-forest">Signed in as {staffName(staffId)}</h1>
         </div>
         <div className="flex flex-wrap gap-2">
           <Link className="btn" href={`/staff/route?date=${today}`}>
@@ -55,35 +55,35 @@ export default async function StaffPage() {
         </div>
       </header>
 
-      <section className="paper px-5 py-5">
-        <h2 className="display text-3xl text-forest-deep">Cartons on hand</h2>
+      <section className="rounded-[18px] bg-white shadow-[0_10px_30px_rgb(37_42_36_/_6%)] px-5 py-5">
+        <h2 className="font-serif text-3xl text-forest">Cartons on hand</h2>
         <div className="mt-4">
           <CartonForms count={farm.getCartons()} />
         </div>
       </section>
 
       <section className="grid gap-4 lg:grid-cols-2">
-        <div className="paper px-5 py-5">
+        <div className="rounded-[18px] bg-white shadow-[0_10px_30px_rgb(37_42_36_/_6%)] px-5 py-5">
           <MoneyInForm />
         </div>
-        <div className="paper px-5 py-5">
+        <div className="rounded-[18px] bg-white shadow-[0_10px_30px_rgb(37_42_36_/_6%)] px-5 py-5">
           <MoneyOutForm />
         </div>
       </section>
 
-      <section className="paper px-5 py-5">
+      <section className="rounded-[18px] bg-white shadow-[0_10px_30px_rgb(37_42_36_/_6%)] px-5 py-5">
         <PayForm />
       </section>
 
       <section className="flex flex-col gap-4">
         <div className="flex flex-wrap items-end justify-between gap-3">
-          <h2 className="display text-3xl text-forest-deep">Ledger</h2>
+          <h2 className="font-serif text-3xl text-forest">Ledger</h2>
           <p className="font-extrabold">
             In {formatDollars(totals.inCents)} · Out {formatDollars(totals.outCents)}
           </p>
         </div>
         {entries.length === 0 ? (
-          <p className="paper px-5 py-6">Nothing logged yet.</p>
+          <p className="rounded-[18px] bg-white shadow-[0_10px_30px_rgb(37_42_36_/_6%)] px-5 py-6">Nothing logged yet.</p>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full min-w-[640px] border-separate border-spacing-y-2 text-left text-sm">
