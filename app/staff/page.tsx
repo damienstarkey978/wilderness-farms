@@ -4,14 +4,25 @@ import { cookies } from "next/headers";
 import { connection } from "next/server";
 import { redirect } from "next/navigation";
 import { staffLogout } from "@/app/actions";
-import { STAFF_COOKIE, formatDollars, staffName } from "@/lib/constants";
+import { STAFF_COOKIE, WEEKDAY_LABEL, formatDollars, isWeekday, staffName } from "@/lib/constants";
 import { floridaDate } from "@/lib/dates";
 import { readStaffCookie } from "@/lib/auth";
-import { getFarm, type LedgerEntry } from "@/lib/db";
+import { getFarm, type LedgerEntry, type Signup } from "@/lib/db";
 import { ledgerTotals } from "@/lib/ledger";
 import { CartonForms, MoneyInForm, MoneyOutForm, PayForm } from "./staff-forms";
 
 export const metadata: Metadata = { title: "Staff desk", robots: { index: false, follow: false } };
+
+function waitlistExtras(signup: Signup): string[] {
+  const lines: string[] = [];
+  if (signup.phone) lines.push(signup.phone);
+  if (signup.address) lines.push(signup.address);
+  if (isWeekday(signup.weekday)) lines.push(WEEKDAY_LABEL[signup.weekday]);
+  if (signup.dozens > 0) lines.push(`${signup.dozens} dozen`);
+  if (signup.cadence === "weekly") lines.push("Weekly");
+  if (signup.cadence === "one_time") lines.push("One time");
+  return lines;
+}
 
 const CATEGORY_LABEL: Record<LedgerEntry["category"], string> = {
   egg_sales: "Egg sales",
@@ -29,6 +40,7 @@ export default async function StaffPage() {
   if (!staffId) redirect("/staff/login");
 
   const farm = getFarm();
+  const waitlist = farm.listWaitlist();
   const entries = farm.listLedger();
   const totals = ledgerTotals(entries);
   const today = floridaDate();
@@ -54,6 +66,29 @@ export default async function StaffPage() {
           </form>
         </div>
       </header>
+
+      <section className="rounded-[28px] bg-white px-5 py-5 shadow-[0_10px_30px_rgb(37_42_36_/_6%)]">
+        <p className="text-xs font-medium tracking-[0.18em] text-sage uppercase">Waitlist</p>
+        <h2 className="mt-1 font-serif text-3xl text-forest">{waitlist.length}</h2>
+        {waitlist.length === 0 ? (
+          <p className="mt-3 text-ink/80">Nobody is on the list yet.</p>
+        ) : (
+          <ul className="mt-4 flex flex-col gap-3">
+            {waitlist.map((signup) => (
+              <li key={signup.id} className="rounded-2xl border border-beige px-4 py-3">
+                <p className="font-serif text-xl text-forest">{signup.name}</p>
+                <p className="text-sm">{signup.email}</p>
+                <p className="text-sm">{signup.zip ? `ZIP ${signup.zip}` : "ZIP not given"}</p>
+                {waitlistExtras(signup).map((line) => (
+                  <p key={line} className="text-sm text-ink/80">
+                    {line}
+                  </p>
+                ))}
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
 
       <section className="rounded-[18px] bg-white shadow-[0_10px_30px_rgb(37_42_36_/_6%)] px-5 py-5">
         <h2 className="font-serif text-3xl text-forest">Cartons on hand</h2>

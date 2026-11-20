@@ -44,7 +44,9 @@ const cards = [
 
 export default async function HomePage() {
   await connection();
-  const ordering = getFarm().getGreenlit();
+  const farm = getFarm();
+  const ordering = farm.getGreenlit();
+  const waitlistCount = farm.waitlistCount();
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -70,6 +72,10 @@ export default async function HomePage() {
             Vedra Beach. We may expand later. If you live outside Ponte Vedra Beach, you can still sign up, and we
             will alert you when we serve your area.
           </p>
+          <div className="mt-4 rounded-2xl bg-white px-4 py-3">
+            <p className="text-xs text-sage">On the list</p>
+            <p className="font-serif text-2xl text-forest">{waitlistCount}</p>
+          </div>
         </div>
         <Image
           src="/photos/hero-carton.jpg"

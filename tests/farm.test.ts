@@ -9,6 +9,7 @@ import { adminCookieValid, passwordMatches, signAdminCookie } from "../lib/auth"
 import { DEFAULT_ADMIN_PASSWORD, PRICE_CENTS } from "../lib/constants";
 import { signupsToCsv } from "../lib/csv";
 import { farmPath, openFarm, type FarmStore } from "../lib/db";
+import { translatePostgres } from "../lib/sql";
 import { placeEarlyAccess, placeInterest, placeOrder, settleCheckout } from "../lib/orders";
 import { parseEarlyAccess, parseForm, type EarlyAccessInput, type RequestInput } from "../lib/parse";
 import { verifyStripeSignature } from "../lib/stripe";
@@ -383,6 +384,68 @@ test("csv export includes emails and the admin cookie accepts the local default"
   if (previousPassword === undefined) delete process.env.ADMIN_PASSWORD;
   else process.env.ADMIN_PASSWORD = previousPassword;
   farm.close();
+});
+
+test("the public waitlist count is real signups only", () => {
+  const farm = tempFarm();
+  try {
+    assert.equal(farm.waitlistCount(), 0);
+    assert.deepEqual(farm.listWaitlist(), []);
+    const demo = placeEarlyAccess(farm, {
+      name: "Sample Sam Shore",
+      email: "sam@example.com",
+      zip: "32082",
+      phone: "",
+      address: "",
+      dozens: null,
+      cadence: "",
+      weekday: "",
+      consent: true,
+    });
+    assert.equal(demo.ok, true);
+    assert.equal(farm.waitlistCount(), 0);
+    const real = placeEarlyAccess(farm, {
+      name: "Ada Marsh",
+      email: "ada@example.com",
+      zip: "32082",
+      phone: "904-555-0134",
+      address: "18 Ocean Blvd",
+      dozens: 2,
+      cadence: "weekly",
+      weekday: "tue",
+      consent: true,
+    });
+    assert.equal(real.ok, true);
+    if (!real.ok) return;
+    assert.equal(farm.waitlistCount(), 1);
+    const listed = farm.listWaitlist();
+    assert.equal(listed.length, 1);
+    assert.equal(listed[0].name, "Ada Marsh");
+    assert.equal(listed[0].email, "ada@example.com");
+    assert.equal(listed[0].zip, "32082");
+    assert.equal(listed[0].phone, "904-555-0134");
+    const held = farm.beginOrder(request());
+    assert.equal(held.ok, true);
+    assert.equal(farm.waitlistCount(), 1);
+    assert.equal(farm.listWaitlist().length, 1);
+  } finally {
+    farm.close();
+  }
+});
+
+test("postgres SQL matches the sqlite statements the farm already runs", () => {
+  assert.equal(translatePostgres("BEGIN IMMEDIATE"), "BEGIN");
+  assert.equal(translatePostgres("PRAGMA journal_mode = DELETE"), "");
+  assert.equal(translatePostgres("SELECT '?'"), "SELECT '?'");
+  assert.equal(
+    translatePostgres("SELECT * FROM signups WHERE email = ? AND zip = ?"),
+    "SELECT * FROM signups WHERE email = $1 AND zip = $2",
+  );
+  assert.match(translatePostgres("PRAGMA table_info(signups)"), /information_schema\.columns/);
+  assert.equal(
+    translatePostgres("INSERT OR IGNORE INTO deliveries (id) VALUES (?)"),
+    "INSERT INTO deliveries (id) VALUES ($1) ON CONFLICT DO NOTHING",
+  );
 });
 
 test("an unwritable working directory still opens a farm database", () => {

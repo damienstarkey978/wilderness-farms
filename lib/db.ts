@@ -2,7 +2,9 @@ import { randomUUID } from "node:crypto";
 import { mkdirSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
-import { DatabaseSync, type SqlRow } from "node:sqlite";
+import { DatabaseSync } from "node:sqlite";
+import { openPostgres } from "./pg-sync";
+import { DEMO_WAITLIST_NAMES, type Row, type SqlDatabase } from "./sql";
 import { classifyAddress, type AddressFlag } from "./address";
 import {
   CAPS,
@@ -134,17 +136,17 @@ CREATE TABLE IF NOT EXISTS stop_progress (
 );
 `;
 
-function text(row: SqlRow, key: string): string {
+function text(row: Row, key: string): string {
   const value = row[key];
   return value == null ? "" : String(value);
 }
 
-function textOrNull(row: SqlRow, key: string): string | null {
+function textOrNull(row: Row, key: string): string | null {
   const value = row[key];
   return value == null ? null : String(value);
 }
 
-function mapLedger(row: SqlRow): LedgerEntry {
+function mapLedger(row: Row): LedgerEntry {
   const payee = textOrNull(row, "payee");
   return {
     id: text(row, "id"),
@@ -160,7 +162,7 @@ function mapLedger(row: SqlRow): LedgerEntry {
   };
 }
 
-function mapSignup(row: SqlRow): Signup {
+function mapSignup(row: Row): Signup {
   return {
     id: text(row, "id"),
     createdAt: text(row, "created_at"),
@@ -186,7 +188,7 @@ function mapSignup(row: SqlRow): Signup {
 }
 
 export class FarmStore {
-  constructor(private readonly db: DatabaseSync) {}
+  constructor(private readonly db: SqlDatabase) {}
 
   close(): void {
     this.db.close();
@@ -670,10 +672,17 @@ export class FarmStore {
     return { workDate: text(row, "work_date"), state, staffId: text(row, "staff_id") };
   }
 
+  listWaitlist(): Signup[] {
+    const filter = realWaitlistWhere();
+    return this.db
+      .prepare(`SELECT * FROM signups WHERE ${filter.sql} ORDER BY created_at DESC, id DESC`)
+      .all(...filter.args)
+      .map(mapSignup);
+  }
+
   waitlistCount(): number {
-    const row = this.db
-      .prepare("SELECT COUNT(*) AS n FROM signups WHERE kind = 'waitlist' AND status = 'interest'")
-      .get();
+    const filter = realWaitlistWhere();
+    const row = this.db.prepare(`SELECT COUNT(*) AS n FROM signups WHERE ${filter.sql}`).get(...filter.args);
     return Number(row?.n ?? 0);
   }
 
@@ -750,15 +759,50 @@ export class FarmStore {
 
 export function openFarm(file: string): FarmStore {
   mkdirSync(path.dirname(file), { recursive: true });
-  const db = new DatabaseSync(file);
-  db.exec("PRAGMA journal_mode = DELETE");
-  db.exec("PRAGMA busy_timeout = 5000");
+  const raw = new DatabaseSync(file);
+  raw.exec("PRAGMA journal_mode = DELETE");
+  raw.exec("PRAGMA busy_timeout = 5000");
+  const db = wrapSqlite(raw);
   db.exec(SCHEMA);
   ensureSignupColumns(db);
   return new FarmStore(db);
 }
 
-function ensureSignupColumns(db: DatabaseSync): void {
+function realWaitlistWhere(): { sql: string; args: string[] } {
+  const marks = DEMO_WAITLIST_NAMES.map(() => "?").join(", ");
+  return {
+    sql: `kind = 'waitlist' AND status = 'interest' AND name NOT IN (${marks})`,
+    args: [...DEMO_WAITLIST_NAMES],
+  };
+}
+
+function wrapSqlite(db: DatabaseSync): SqlDatabase {
+  return {
+    exec(sql) {
+      db.exec(sql);
+    },
+    prepare(sql) {
+      const statement = db.prepare(sql);
+      return {
+        get(...args) {
+          return statement.get(...(args as never[])) as Row | undefined;
+        },
+        all(...args) {
+          return statement.all(...(args as never[])) as unknown as Row[];
+        },
+        run(...args) {
+          const result = statement.run(...(args as never[]));
+          return { changes: Number(result.changes) };
+        },
+      };
+    },
+    close() {
+      db.close();
+    },
+  };
+}
+
+function ensureSignupColumns(db: SqlDatabase): void {
   const names = new Set(
     db
       .prepare("PRAGMA table_info(signups)")
@@ -776,8 +820,8 @@ function preferredFarmFile(): string {
   return path.join(process.cwd(), "data", "farm.sqlite");
 }
 
-// Netlify's server filesystem is read-only except for the temp directory.
-// Leave DATABASE_PATH unset and still boot: the waitlist renders, and payments stay unconfigured.
+// Netlify's server disk is ephemeral. NETLIFY_DB_URL is the durable database.
+// Leave it unset and the site still boots on a local sqlite file.
 function writableFarmFile(): string {
   const preferred = preferredFarmFile();
   try {
@@ -794,12 +838,35 @@ export function farmPath(): string {
   return process.env.DATABASE_PATH || writableFarmFile();
 }
 
+function durableDatabaseUrl(): string | undefined {
+  if (process.env.NEXT_PHASE === "phase-production-build") return undefined;
+  const url = process.env.NETLIFY_DB_URL?.trim() ?? "";
+  if (url.startsWith("postgres://") || url.startsWith("postgresql://")) return url;
+  return undefined;
+}
+
+function openDurableFarm(url: string): FarmStore {
+  const db = openPostgres(url);
+  try {
+    db.exec(SCHEMA);
+    ensureSignupColumns(db);
+  } catch (error) {
+    try {
+      db.prepare("SELECT COUNT(*) AS n FROM signups").get();
+    } catch {
+      throw error;
+    }
+  }
+  return new FarmStore(db);
+}
+
 export function getFarm(): FarmStore {
-  const file = farmPath();
-  if (!singleton || singletonPath !== file) {
+  const remote = durableDatabaseUrl();
+  const key = remote ? "netlify-db" : farmPath();
+  if (!singleton || singletonPath !== key) {
     singleton?.close();
-    singleton = openFarm(file);
-    singletonPath = file;
+    singleton = remote ? openDurableFarm(remote) : openFarm(key);
+    singletonPath = key;
   }
   return singleton;
 }
