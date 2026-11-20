@@ -1,0 +1,6 @@
+CREATE TABLE IF NOT EXISTS visitors (
+  id TEXT PRIMARY KEY,
+  seen_on TEXT NOT NULL
+);
+
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE visitors TO netlifydb_readonly;

@@ -1,9 +1,30 @@
+import { existsSync } from "node:fs";
 import { createRequire } from "node:module";
 import path from "node:path";
+import { Client } from "pg";
 import { MessageChannel, Worker, receiveMessageOnPort } from "node:worker_threads";
 import { translatePostgres, type Row, type SqlDatabase, type SqlStatement } from "./sql";
 
-const nodeRequire = createRequire(path.join(process.cwd(), "package.json"));
+void Client;
+
+function resolvePg(): string {
+  const attempts = [
+    () => createRequire(import.meta.url).resolve("pg"),
+    () => createRequire(path.join(process.cwd(), "package.json")).resolve("pg"),
+    () => path.join(process.cwd(), "node_modules", "pg", "lib", "client.js"),
+  ];
+  const errors: string[] = [];
+  for (const attempt of attempts) {
+    try {
+      const resolved = attempt();
+      if (resolved.startsWith("/") && existsSync(/*turbopackIgnore: true*/ resolved)) return resolved;
+      errors.push(resolved);
+    } catch (error) {
+      errors.push(error instanceof Error ? error.message : String(error));
+    }
+  }
+  throw new Error(errors.join(" ") || "Could not load the database driver.");
+}
 
 type Response =
   | { id: number; ok: true; rows?: Row[]; changes?: number }
@@ -29,6 +50,11 @@ async function database() {
   client = new Client({
     connectionString: url.toString(),
     ssl: sslmode && sslmode !== "disable" ? { rejectUnauthorized: false } : undefined,
+  });
+  client.on("error", () => {
+    const dying = client;
+    client = null;
+    if (dying) dying.end().catch(() => {});
   });
   await client.connect();
   return client;
@@ -80,14 +106,25 @@ class PostgresDatabase implements SqlDatabase {
         port: channel.port2,
         sab,
         connectionString,
-        pgPath: nodeRequire.resolve("pg"),
+        pgPath: resolvePg(),
       },
       transferList: [channel.port2],
+    });
+    let workerError = "";
+    const wake = (error?: unknown) => {
+      if (error) workerError = error instanceof Error ? error.message : String(error);
+      Atomics.store(this.flag, 0, 1);
+      Atomics.notify(this.flag, 0);
+    };
+    this.worker.on("error", wake);
+    this.worker.on("exit", (code) => {
+      if (code !== 0 && !workerError) workerError = `Database worker exited (${code}).`;
+      wake();
     });
     this.wait();
     const ready = receiveMessageOnPort(this.port);
     if (!ready?.message || !(ready.message as { ready?: boolean }).ready) {
-      throw new Error("Database worker did not start.");
+      throw new Error((workerError || "Database worker did not start.").replace(/postgres(?:ql)?:\/\/\S+/gi, "postgres://database"));
     }
   }
 

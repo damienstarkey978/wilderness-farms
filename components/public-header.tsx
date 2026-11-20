@@ -30,18 +30,19 @@ export function PublicHeader() {
         scrolled ? "border-beige/80 bg-white/95 shadow-[0_8px_24px_rgb(37_42_36_/_6%)] backdrop-blur" : "border-transparent bg-cream"
       }`}
     >
-      <div className="mx-auto flex max-w-[1200px] items-center gap-4 px-8 py-3">
-        <Link href="/" className="mx-auto shrink-0 no-underline md:mx-0" aria-label="Wilderness Farms home">
+      <div className="mx-auto flex max-w-[1200px] flex-col items-center gap-3 px-6 py-4">
+        <Link href="/" className="block w-full max-w-[40rem] no-underline xl:max-w-[52rem]" aria-label="Wilderness Farms home">
           <Image
             src="/wilderness-farms-wordmark.jpg"
             alt="Wilderness Farms, Ponte Vedra Beach, Florida"
             width={2172}
             height={724}
             priority
-            className="h-auto w-[15rem] max-w-full"
+            unoptimized
+            className="block h-auto w-full object-contain"
           />
         </Link>
-        <nav className="ml-auto hidden items-center gap-8 md:flex" aria-label="Primary">
+        <nav className="flex flex-wrap items-center justify-center gap-x-8 gap-y-2" aria-label="Primary">
           {LINKS.map((link) => {
             const active = link.href === "/staff" ? pathname.startsWith("/staff") : pathname === link.href;
             return (

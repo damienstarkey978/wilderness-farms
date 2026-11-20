@@ -40,6 +40,7 @@ export default async function StaffPage() {
   if (!staffId) redirect("/staff/login");
 
   const farm = getFarm();
+  const visitors = farm.visitorStats();
   const waitlist = farm.listWaitlist();
   const entries = farm.listLedger();
   const totals = ledgerTotals(entries);
@@ -66,6 +67,26 @@ export default async function StaffPage() {
           </form>
         </div>
       </header>
+
+      <section className="rounded-[28px] bg-white px-5 py-5 shadow-[0_10px_30px_rgb(37_42_36_/_6%)]">
+        <p className="text-xs font-medium tracking-[0.18em] text-sage uppercase">Visitors</p>
+        <div className="mt-4 grid grid-cols-2 gap-3">
+          {(
+            [
+              ["Today", visitors.today],
+              ["This week", visitors.week],
+              ["This month", visitors.month],
+              ["Total", visitors.total],
+            ] as const
+          ).map(([label, value]) => (
+            <div key={label} className="rounded-2xl bg-cream px-4 py-3">
+              <p className="text-xs text-sage">{label}</p>
+              <p className="font-serif text-2xl text-forest">{value}</p>
+            </div>
+          ))}
+        </div>
+        <p className="mt-3 text-sm text-ink/70">Eastern time. A refresh is not a new visitor.</p>
+      </section>
 
       <section className="rounded-[28px] bg-white px-5 py-5 shadow-[0_10px_30px_rgb(37_42_36_/_6%)]">
         <p className="text-xs font-medium tracking-[0.18em] text-sage uppercase">Waitlist</p>

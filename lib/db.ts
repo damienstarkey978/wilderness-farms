@@ -3,6 +3,7 @@ import { mkdirSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { DatabaseSync } from "node:sqlite";
+import { floridaDate, mondayOf } from "./dates";
 import { openPostgres } from "./pg-sync";
 import { DEMO_WAITLIST_NAMES, type Row, type SqlDatabase } from "./sql";
 import { classifyAddress, type AddressFlag } from "./address";
@@ -133,6 +134,10 @@ CREATE TABLE IF NOT EXISTS stop_progress (
   staff_id TEXT NOT NULL,
   updated_at TEXT NOT NULL,
   PRIMARY KEY (work_date, signup_id)
+);
+CREATE TABLE IF NOT EXISTS visitors (
+  id TEXT PRIMARY KEY,
+  seen_on TEXT NOT NULL
 );
 `;
 
@@ -686,6 +691,33 @@ export class FarmStore {
     return Number(row?.n ?? 0);
   }
 
+  recordVisitor(id: string, now = new Date()): boolean {
+    const seenOn = floridaDate(now);
+    const result = this.db
+      .prepare("INSERT OR IGNORE INTO visitors (id, seen_on) VALUES (?, ?)")
+      .run(id, seenOn);
+    return result.changes > 0;
+  }
+
+  visitorStats(now = new Date()): { today: number; week: number; month: number; total: number } {
+    const today = floridaDate(now);
+    const weekStart = mondayOf(today) ?? today;
+    const monthStart = `${today.slice(0, 7)}-01`;
+    const count = (from: string) => {
+      const row = this.db
+        .prepare("SELECT COUNT(*) AS n FROM visitors WHERE seen_on >= ? AND seen_on <= ?")
+        .get(from, today);
+      return Number(row?.n ?? 0);
+    };
+    const total = this.db.prepare("SELECT COUNT(*) AS n FROM visitors").get();
+    return {
+      today: count(today),
+      week: count(weekStart),
+      month: count(monthStart),
+      total: Number(total?.n ?? 0),
+    };
+  }
+
   swapRoutePositions(weekday: Weekday, firstId: string, secondId: string): void {
     const first = this.routePosition(weekday, firstId);
     const second = this.routePosition(weekday, secondId);
@@ -865,8 +897,20 @@ export function getFarm(): FarmStore {
   const key = remote ? "netlify-db" : farmPath();
   if (!singleton || singletonPath !== key) {
     singleton?.close();
-    singleton = remote ? openDurableFarm(remote) : openFarm(key);
-    singletonPath = key;
+    if (!remote) {
+      singleton = openFarm(key);
+      singletonPath = key;
+    } else {
+      try {
+        singleton = openDurableFarm(remote);
+        singletonPath = key;
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        console.error(message.replace(/postgres(?:ql)?:\/\/\S+/gi, "postgres://database"));
+        singleton = openFarm(farmPath());
+        singletonPath = farmPath();
+      }
+    }
   }
   return singleton;
 }

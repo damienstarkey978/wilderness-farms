@@ -3,6 +3,7 @@ export const LAYING_START = "March 2027";
 export const PENDING_HOLD_MS = 30 * 60 * 1000;
 export const ADMIN_COOKIE = "wf_admin";
 export const STAFF_COOKIE = "wf_staff";
+export const VISITOR_COOKIE = "wf_visitor";
 export const DEFAULT_ADMIN_PASSWORD = "wilderness-local";
 
 export const STAFF = [

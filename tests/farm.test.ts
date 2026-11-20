@@ -433,6 +433,22 @@ test("the public waitlist count is real signups only", () => {
   }
 });
 
+test("visitors are counted once and are not waitlist signups", () => {
+  const farm = tempFarm();
+  try {
+    const now = new Date("2026-11-20T15:00:00.000Z");
+    const id = "11111111-1111-4111-8111-111111111111";
+    assert.equal(farm.recordVisitor(id, now), true);
+    assert.equal(farm.recordVisitor(id, now), false);
+    assert.equal(farm.waitlistCount(), 0);
+    assert.deepEqual(farm.visitorStats(now), { today: 1, week: 1, month: 1, total: 1 });
+    farm.recordVisitor("22222222-2222-4222-8222-222222222222", new Date("2026-10-02T15:00:00.000Z"));
+    assert.deepEqual(farm.visitorStats(now), { today: 1, week: 1, month: 1, total: 2 });
+  } finally {
+    farm.close();
+  }
+});
+
 test("postgres SQL matches the sqlite statements the farm already runs", () => {
   assert.equal(translatePostgres("BEGIN IMMEDIATE"), "BEGIN");
   assert.equal(translatePostgres("PRAGMA journal_mode = DELETE"), "");
